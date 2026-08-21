@@ -422,6 +422,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (parsed.chatMessages && Array.isArray(parsed.chatMessages)) {
           setChatMessages(parsed.chatMessages.filter((m: ChatMessage) => m.id !== 'msg-1'));
         }
+        if (parsed.cart && Array.isArray(parsed.cart)) {
+          setCart(parsed.cart);
+        }
       }
     } catch (e) {
       console.warn('Failed to load local saved state:', e);
@@ -440,6 +443,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           orders,
           settings,
           chatMessages,
+          cart,
           savedAt: new Date().toISOString(),
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
@@ -451,7 +455,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }, 400);
     return () => clearTimeout(timeout);
-  }, [products, customers, transactions, orders, settings, chatMessages]);
+  }, [products, customers, transactions, orders, settings, chatMessages, cart]);
 
   // Online / Offline monitor
   useEffect(() => {

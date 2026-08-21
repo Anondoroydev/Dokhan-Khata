@@ -112,7 +112,7 @@ export interface Transaction {
     unitPrice: number;
     total: number;
   }[];
-  paymentMethod: 'cash' | 'bkash' | 'nagad' | 'card' | 'due';
+  paymentMethod: 'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due';
   receivedBy: string; // Staff/Admin name
   invoiceNo?: string;
 }

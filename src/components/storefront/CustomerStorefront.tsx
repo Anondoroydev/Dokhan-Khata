@@ -72,7 +72,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
   const [customerPhone, setCustomerPhone] = useState(currentUser ? currentUser.emailOrPhone : '01712334455');
   const [customerAddress, setCustomerAddress] = useState('House 14, Road 2, Dhanmondi, Dhaka');
   const [deliveryNotes, setDeliveryNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bkash' | 'nagad' | 'card'>('bkash');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card'>('bkash');
 
   useEffect(() => {
     if (currentUser) {
@@ -220,12 +220,12 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs sm:text-sm hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center gap-2 shadow-lg shadow-emerald-950/40 border border-emerald-400/30 cursor-pointer"
+            className="relative p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center shadow-lg shadow-emerald-950/40 border border-emerald-400/30 cursor-pointer"
+            title={t.storefront.cart}
           >
-            <ShoppingCart className="w-4 h-4 text-white" />
-            <span>{t.storefront.cart}</span>
+            <ShoppingCart className="w-5 h-5 text-white" />
             {cartItemCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-white text-emerald-900 text-xs font-bold font-mono">
+              <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono">
                 {cartItemCount}
               </span>
             )}
@@ -392,89 +392,62 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       {/* TAB 2: Customer Orders Tracker */}
       {activeTab === 'orders' && (
         <div className="space-y-4">
-          <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl shadow-black/20">
-            <div className="flex items-center justify-between">
+          {!currentUser ? (
+            <div className="bg-slate-900/60 backdrop-blur-xl p-10 rounded-3xl border border-white/10 text-center space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                <LogIn className="w-6 h-6" />
+              </div>
               <div>
-                <h3 className="font-bold text-base text-white">{t.storefront.myOrders}</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {isBn ? 'আপনার অনলাইন অর্ডারের ডেলিভারি অগ্রগতি ও সফল অর্ডারের ইতিহাস' : 'Track your live grocery delivery status'}
+                <h3 className="font-bold text-white text-base">
+                  {isBn ? 'লগইন প্রয়োজন' : 'Login Required'}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  {isBn
+                    ? 'আপনার অর্ডার স্ট্যাটাস, পেমেন্ট ও ডেলিভারি হিস্ট্রি দেখতে অনুগ্রহ করে আপনার অ্যাকাউন্টে লগইন করুন।'
+                    : 'Please log in to your account to view your live order status and payment history.'}
                 </p>
               </div>
+              <button
+                onClick={() => openLoginModal('customer')}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>{t.auth.loginTab}</span>
+              </button>
             </div>
-
-            {/* Active / Running Orders Section */}
-            <div className="mt-6 space-y-4">
-              <h4 className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                <span>{isBn ? 'চলতি ডেলিভারি অর্ডারসমূহ' : 'Active Delivery Orders'}</span>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px]">
-                  {orders.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length}
-                </span>
-              </h4>
-
-              {orders.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled').length > 0 ? (
-                orders
-                  .filter((o) => o.status !== 'delivered' && o.status !== 'cancelled')
-                  .map((ord) => (
-                    <div key={ord.id} className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.03] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="font-bold font-mono text-sm text-white">{ord.orderNumber}</span>
-                          <span className="text-xs text-slate-400 block">{new Date(ord.orderDate).toLocaleString()}</span>
-                        </div>
-                        <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-full uppercase">
-                          {ord.status}
-                        </span>
-                      </div>
-
-                      <div className="divide-y divide-white/10 text-xs">
-                        {ord.items.map((item, idx) => (
-                          <div key={idx} className="py-1 flex justify-between text-slate-300">
-                            <span>{isBn ? item.productNameBn || item.productName : item.productName} ({item.quantity}x)</span>
-                            <span className="font-mono font-semibold text-white">৳{item.total}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
-                        <span>{isBn ? 'মোট প্রদেয়' : 'Total Payable'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
-                        <button
-                          onClick={() => onOpenReceipt(ord)}
-                          className="text-emerald-400 hover:text-emerald-300 transition-colors"
-                        >
-                          {isBn ? 'রসিদ দেখুন →' : 'View Invoice →'}
-                        </button>
-                      </div>
-                    </div>
-                  ))
-              ) : (
-                <div className="p-4 rounded-2xl border border-dashed border-white/10 text-center text-xs text-slate-400">
-                  {isBn ? 'বর্তমানে কোনো রানিং অর্ডার নেই।' : 'No active running orders right now.'}
+          ) : (
+            <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl shadow-black/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-base text-white">{t.storefront.myOrders}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {isBn ? 'আপনার অনলাইন অর্ডারের ডেলিভারি অগ্রগতি ও সফল অর্ডারের ইতিহাস' : 'Track your live grocery delivery status'}
+                  </p>
                 </div>
-              )}
+              </div>
 
-              {/* Delivered / Completed Orders Section */}
-              <div className="pt-6 border-t border-white/10 space-y-4">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span>{isBn ? 'সফল ও সম্পন্ন অর্ডারসমূহ (Delivered)' : 'Completed & Delivered Orders'}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px]">
-                    {orders.filter((o) => o.status === 'delivered').length}
+              {/* Active / Running Orders Section */}
+              <div className="mt-6 space-y-4">
+                <h4 className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  <span>{isBn ? 'চলতি ডেলিভারি অর্ডারসমূহ' : 'Active Delivery Orders'}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px]">
+                    {orders.filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status !== 'delivered' && o.status !== 'cancelled').length}
                   </span>
                 </h4>
 
-                {orders.filter((o) => o.status === 'delivered').length > 0 ? (
+                {orders.filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status !== 'delivered' && o.status !== 'cancelled').length > 0 ? (
                   orders
-                    .filter((o) => o.status === 'delivered')
+                    .filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status !== 'delivered' && o.status !== 'cancelled')
                     .map((ord) => (
-                      <div key={ord.id} className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] space-y-3">
+                      <div key={ord.id} className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/[0.03] space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="font-bold font-mono text-sm text-white">{ord.orderNumber}</span>
                             <span className="text-xs text-slate-400 block">{new Date(ord.orderDate).toLocaleString()}</span>
                           </div>
-                          <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs rounded-full uppercase flex items-center gap-1">
-                            <span>✓ {isBn ? 'সফল (Delivered)' : 'Delivered'}</span>
+                          <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold text-xs rounded-full uppercase">
+                            {ord.status}
                           </span>
                         </div>
 
@@ -488,67 +461,146 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                         </div>
 
                         <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
-                          <span>{isBn ? 'পরিশোধিত' : 'Paid Total'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
+                          <span>{isBn ? 'মোট প্রদেয়' : 'Total Payable'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
                           <button
                             onClick={() => onOpenReceipt(ord)}
                             className="text-emerald-400 hover:text-emerald-300 transition-colors"
                           >
-                            {isBn ? 'ইনভয়েস দেখুন →' : 'View Invoice →'}
+                            {isBn ? 'রসিদ দেখুন →' : 'View Invoice →'}
                           </button>
                         </div>
                       </div>
                     ))
                 ) : (
-                  <div className="p-4 rounded-2xl border border-dashed border-white/10 text-center text-xs text-slate-500">
-                    {isBn ? 'এখনো কোনো সম্পন্ন/সফল অর্ডার নেই।' : 'No completed orders yet.'}
+                  <div className="p-4 rounded-2xl border border-dashed border-white/10 text-center text-xs text-slate-400">
+                    {isBn ? 'বর্তমানে আপনার কোনো রানিং অর্ডার নেই।' : 'No active running orders right now.'}
                   </div>
                 )}
+
+                {/* Delivered / Completed Orders Section */}
+                <div className="pt-6 border-t border-white/10 space-y-4">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span>{isBn ? 'সফল ও সম্পন্ন অর্ডারসমূহ (Delivered)' : 'Completed & Delivered Orders'}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px]">
+                      {orders.filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status === 'delivered').length}
+                    </span>
+                  </h4>
+
+                  {orders.filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status === 'delivered').length > 0 ? (
+                    orders
+                      .filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status === 'delivered')
+                      .map((ord) => (
+                        <div key={ord.id} className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-bold font-mono text-sm text-white">{ord.orderNumber}</span>
+                              <span className="text-xs text-slate-400 block">{new Date(ord.orderDate).toLocaleString()}</span>
+                            </div>
+                            <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs rounded-full uppercase flex items-center gap-1">
+                              <span>✓ {isBn ? 'সফল (Delivered)' : 'Delivered'}</span>
+                            </span>
+                          </div>
+
+                          <div className="divide-y divide-white/10 text-xs">
+                            {ord.items.map((item, idx) => (
+                              <div key={idx} className="py-1 flex justify-between text-slate-300">
+                                <span>{isBn ? item.productNameBn || item.productName : item.productName} ({item.quantity}x)</span>
+                                <span className="font-mono font-semibold text-white">৳{item.total}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
+                            <span>{isBn ? 'পরিশোধিত' : 'Paid Total'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
+                            <button
+                              onClick={() => onOpenReceipt(ord)}
+                              className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                            >
+                              {isBn ? 'ইনভয়েস দেখুন →' : 'View Invoice →'}
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="p-4 rounded-2xl border border-dashed border-white/10 text-center text-xs text-slate-500">
+                      {isBn ? 'এখনো আপনার কোনো সম্পন্ন/সফল অর্ডার নেই।' : 'No completed orders yet.'}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* TAB 3: My Baki Khata Check */}
       {activeTab === 'my_khata' && (
         <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl shadow-black/20 space-y-4">
-          <div>
-            <h3 className="font-bold text-base text-white">{isBn ? 'আপনার বাকীর হিসাব খাতা' : 'Your Baki Khata Account'}</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {isBn ? 'দোকানে আপনার বর্তমান বকেয়া ও জমার খতিয়ান' : 'Check your store credit balance and payment history'}
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder="01XXXXXXXXX"
-              className="px-3 py-2 text-xs font-mono border border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white w-64"
-            />
-          </div>
-
-          {activeCustomerRecord ? (
-            <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
-                  <span className="text-xs font-bold text-rose-400 block">{t.khata.currentDue}</span>
-                  <span className="text-2xl font-black font-mono text-rose-400">৳{activeCustomerRecord.totalDue}</span>
-                </div>
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                  <span className="text-xs font-bold text-emerald-400 block">{t.khata.totalPaid}</span>
-                  <span className="text-2xl font-black font-mono text-emerald-400">৳{activeCustomerRecord.totalPaid}</span>
-                </div>
+          {!currentUser ? (
+            <div className="p-10 text-center space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                <LogIn className="w-6 h-6" />
               </div>
-              <p className="text-xs text-slate-400">
-                {isBn
-                  ? 'বকেয়া পরিশোধ করতে চাইলে বিকাশে পেমেন্ট করে দোকানদারকে সরাসরি চ্যাটে মেসেজ দিন।'
-                  : 'To clear your dues, you can pay via bKash/Nagad and notify the owner in Live Chat.'}
-              </p>
+              <div>
+                <h3 className="font-bold text-white text-base">
+                  {isBn ? 'লগইন প্রয়োজন' : 'Login Required'}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  {isBn
+                    ? 'আপনার বাকী হিসাব ও জমা খতিয়ান দেখতে অনুগ্রহ করে আপনার অ্যাকাউন্টে লগইন করুন।'
+                    : 'Please log in to your account to view your credit ledger and baki khata details.'}
+                </p>
+              </div>
+              <button
+                onClick={() => openLoginModal('customer')}
+                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg inline-flex items-center gap-2 cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>{t.auth.loginTab}</span>
+              </button>
             </div>
           ) : (
-            <p className="text-xs text-slate-500">{isBn ? 'এই নাম্বারে কোনো বাকী খাতা পাওয়া যায়নি।' : 'No khata record found for this number.'}</p>
+            <>
+              <div>
+                <h3 className="font-bold text-base text-white">{isBn ? 'আপনার বাকীর হিসাব খাতা' : 'Your Baki Khata Account'}</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {isBn ? 'দোকানে আপনার বর্তমান বকেয়া ও জমার খতিয়ান' : 'Check your store credit balance and payment history'}
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                  className="px-3 py-2 text-xs font-mono border border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white w-64"
+                />
+              </div>
+
+              {activeCustomerRecord ? (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
+                      <span className="text-xs font-bold text-rose-400 block">{t.khata.currentDue}</span>
+                      <span className="text-2xl font-black font-mono text-rose-400">৳{activeCustomerRecord.totalDue}</span>
+                    </div>
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                      <span className="text-xs font-bold text-emerald-400 block">{t.khata.totalPaid}</span>
+                      <span className="text-2xl font-black font-mono text-emerald-400">৳{activeCustomerRecord.totalPaid}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {isBn
+                      ? 'বকেয়া পরিশোধ করতে চাইলে বিকাশে পেমেন্ট করে দোকানদারকে সরাসরি চ্যাটে মেসেজ দিন।'
+                      : 'To clear your dues, you can pay via bKash/Nagad and notify the owner in Live Chat.'}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">{isBn ? 'এই নাম্বারে কোনো বাকী খাতা পাওয়া যায়নি।' : 'No khata record found for this number.'}</p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -720,33 +772,97 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('cod')}
-                      className={`p-3 rounded-2xl border text-left transition-all ${
+                      className={`p-2.5 rounded-2xl border text-left transition-all ${
                         paymentMethod === 'cod'
                           ? 'border-emerald-500/50 bg-emerald-500/20 ring-2 ring-emerald-500/30'
                           : 'border-white/10 bg-white/[0.03] hover:bg-white/10'
                       }`}
                     >
-                      <div className="flex items-center gap-2 font-bold text-white">
+                      <div className="flex items-center gap-2 font-bold text-white text-xs">
                         <Banknote className="w-4 h-4 text-emerald-400" />
                         <span>ক্যাশ অন ডেলিভারি</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">পণ্য হাতে পেয়ে টাকা দিন</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">পণ্য হাতে পেয়ে টাকা</p>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('bkash')}
-                      className={`p-3 rounded-2xl border text-left transition-all ${
+                      className={`p-2.5 rounded-2xl border text-left transition-all ${
                         paymentMethod === 'bkash'
                           ? 'border-pink-500/50 bg-pink-500/20 ring-2 ring-pink-500/30'
                           : 'border-white/10 bg-white/[0.03] hover:bg-white/10'
                       }`}
                     >
-                      <div className="flex items-center gap-2 font-bold text-pink-300">
+                      <div className="flex items-center gap-2 font-bold text-pink-300 text-xs">
                         <Smartphone className="w-4 h-4 text-pink-400" />
-                        <span>বিকাশ / ডিজিটাল</span>
+                        <span>বিকাশ</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-1">ইনস্ট্যান্ট অনলাইন গেটওয়ে</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">বিকাশ অনলাইন পেমেন্ট</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('nagad')}
+                      className={`p-2.5 rounded-2xl border text-left transition-all ${
+                        paymentMethod === 'nagad'
+                          ? 'border-orange-500/50 bg-orange-500/20 ring-2 ring-orange-500/30'
+                          : 'border-white/10 bg-white/[0.03] hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-orange-300 text-xs">
+                        <Smartphone className="w-4 h-4 text-orange-400" />
+                        <span>নগদ</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">নগদ অনলাইন পেমেন্ট</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('rocket')}
+                      className={`p-2.5 rounded-2xl border text-left transition-all ${
+                        paymentMethod === 'rocket'
+                          ? 'border-purple-500/50 bg-purple-500/20 ring-2 ring-purple-500/30'
+                          : 'border-white/10 bg-white/[0.03] hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-purple-300 text-xs">
+                        <Smartphone className="w-4 h-4 text-purple-400" />
+                        <span>রকেট</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">ডাচ-বাংলা রকেট</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('upay')}
+                      className={`p-2.5 rounded-2xl border text-left transition-all ${
+                        paymentMethod === 'upay'
+                          ? 'border-emerald-500/50 bg-emerald-500/20 ring-2 ring-emerald-500/30'
+                          : 'border-white/10 bg-white/[0.03] hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-emerald-300 text-xs">
+                        <Smartphone className="w-4 h-4 text-emerald-400" />
+                        <span>উপায়</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">ইউসিবি উপায় পেমেন্ট</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('card')}
+                      className={`p-2.5 rounded-2xl border text-left transition-all ${
+                        paymentMethod === 'card'
+                          ? 'border-cyan-500/50 bg-cyan-500/20 ring-2 ring-cyan-500/30'
+                          : 'border-white/10 bg-white/[0.03] hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-cyan-300 text-xs">
+                        <CreditCard className="w-4 h-4 text-cyan-400" />
+                        <span>কার্ড</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">ডেবিট/ক্রেডিট কার্ড</p>
                     </button>
                   </div>
                 </div>
@@ -775,7 +891,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
         isOpen={isGatewayOpen}
         onClose={() => setIsGatewayOpen(false)}
         amount={netTotal}
-        paymentMethod={paymentMethod === 'bkash' || paymentMethod === 'nagad' || paymentMethod === 'card' ? paymentMethod : 'bkash'}
+        paymentMethod={paymentMethod === 'cod' ? 'bkash' : paymentMethod}
         language={language}
         settings={settings}
         onSuccess={handleGatewaySuccess}

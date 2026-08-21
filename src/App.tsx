@@ -83,11 +83,10 @@ function AppContent() {
         {/* Floating Fast Chat Button */}
         <button
           onClick={() => setIsChatOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-emerald-500/90 to-teal-600/90 text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl shadow-black/40 backdrop-blur-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 border border-white/25 cursor-pointer"
+          className="fixed bottom-6 right-6 z-40 w-12 h-12 bg-gradient-to-r from-emerald-500/90 to-teal-600/90 text-white rounded-full shadow-2xl shadow-black/40 backdrop-blur-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center border border-white/25 cursor-pointer"
           title={t.chat.title}
         >
-          <MessageSquare className="w-5 h-5" />
-          <span className="text-xs font-bold hidden sm:inline">{t.chat.title}</span>
+          <MessageSquare className="w-5 h-5 text-white" />
         </button>
 
         {/* Global Modals */}

@@ -34,7 +34,7 @@ export const LiveChatModal: React.FC<LiveChatModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 w-[88vw] sm:w-[320px] md:w-[340px] h-[400px] sm:h-[440px] bg-slate-900/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/15 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+    <div className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 w-[90vw] sm:w-[280px] md:w-[300px] h-[300px] sm:h-[350px] bg-slate-900/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/15 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
       {/* Header */}
       <div className="px-3.5 py-2.5 bg-gradient-to-r from-emerald-800/90 via-teal-800/90 to-slate-900/90 border-b border-white/10 text-white flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-2.5">

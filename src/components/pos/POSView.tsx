@@ -40,7 +40,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bkash' | 'nagad' | 'card' | 'due'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due'>('cash');
   const [discount, setDiscount] = useState<number>(0);
   const [receivedAmount, setReceivedAmount] = useState<string>('');
   const [saleNote, setSaleNote] = useState('');
@@ -107,6 +107,8 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
     setDiscount(0);
     setReceivedAmount('');
     setSaleNote('');
+    setPaymentMethod('cash');
+    setSelectedCustomerId('');
   };
 
   const handleCompleteSale = () => {
@@ -386,12 +388,14 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
             <label className="block text-[11px] font-bold text-slate-300 mb-1.5">
               {t.pos.paymentMethod}
             </label>
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {[
-                { id: 'cash', label: t.pos.cash, icon: Banknote },
-                { id: 'due', label: t.pos.due, icon: Tag, isDue: true },
+                { id: 'cash', label: 'Cash', icon: Banknote },
+                { id: 'due', label: 'Due', icon: Tag, isDue: true },
                 { id: 'bkash', label: 'বিকাশ', icon: Smartphone },
                 { id: 'nagad', label: 'নগদ', icon: Smartphone },
+                { id: 'rocket', label: 'রকেট', icon: Smartphone },
+                { id: 'upay', label: 'উপায়', icon: Smartphone },
                 { id: 'card', label: 'কার্ড', icon: CreditCard },
               ].map((m) => {
                 const Icon = m.icon;
@@ -400,7 +404,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
                   <button
                     key={m.id}
                     onClick={() => setPaymentMethod(m.id as any)}
-                    className={`py-2 px-1 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 transition-all border ${
+                    className={`py-2 px-2 rounded-xl text-[10px] font-bold flex flex-col items-center gap-1 transition-all border w-16 ${
                       isSelected
                         ? m.isDue
                           ? 'bg-rose-500/20 border-rose-500 text-rose-300 ring-2 ring-rose-500/30'
@@ -409,7 +413,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
                     }`}
                   >
                     <Icon className="w-3.5 h-3.5" />
-                    <span>{m.label}</span>
+                    <span className="truncate w-full text-center">{m.label}</span>
                   </button>
                 );
               })}
@@ -427,7 +431,6 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
                   type="number"
                   value={receivedAmount}
                   onChange={(e) => setReceivedAmount(e.target.value)}
-                  placeholder={`৳${netPayable}`}
                   className="w-full px-2 py-1 text-xs font-mono font-bold border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500 bg-slate-950/70 text-white"
                 />
               </div>

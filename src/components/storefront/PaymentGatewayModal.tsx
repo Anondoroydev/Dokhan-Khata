@@ -7,7 +7,7 @@ interface PaymentGatewayModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
-  paymentMethod: 'bkash' | 'nagad' | 'card';
+  paymentMethod: 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card';
   language: Language;
   settings: StoreSettings;
   onSuccess: (transactionId: string) => void;
@@ -23,7 +23,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   onSuccess,
 }) => {
   const [step, setStep] = useState<'input_number' | 'otp' | 'pin' | 'processing' | 'success'>('input_number');
-  const [phoneNumber, setPhoneNumber] = useState('01700000000');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [pin, setPin] = useState('');
   const [cardHolder, setCardHolder] = useState('MR. JOHN DOE');
@@ -37,10 +37,12 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   const isBn = language === 'bn';
   const isBkash = paymentMethod === 'bkash';
   const isNagad = paymentMethod === 'nagad';
+  const isRocket = paymentMethod === 'rocket';
+  const isUpay = paymentMethod === 'upay';
   const isCard = paymentMethod === 'card';
 
-  const themeBg = isBkash ? 'bg-[#E2136E]' : isNagad ? 'bg-[#E35925]' : 'bg-slate-900';
-  const brandName = isBkash ? 'bKash Payment' : isNagad ? 'Nagad Online Payment' : 'Secure Card Checkout';
+  const themeBg = isBkash ? 'bg-[#E2136E]' : isNagad ? 'bg-[#E35925]' : isRocket ? 'bg-[#8C349B]' : isUpay ? 'bg-[#00A651]' : 'bg-slate-900';
+  const brandName = isBkash ? 'bKash Payment' : isNagad ? 'Nagad Online Payment' : isRocket ? 'Rocket Payment' : isUpay ? 'Upay Payment' : 'Secure Card Checkout';
 
   const triggerConfetti = () => {
     confetti({
@@ -58,7 +60,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
     } else if (step === 'pin') {
       setStep('processing');
       setTimeout(() => {
-        const trx = (isBkash ? 'BK' : isNagad ? 'NG' : 'CRD') + Math.floor(100000000 + Math.random() * 900000000).toString();
+        const trx = (isBkash ? 'BK' : isNagad ? 'NG' : isRocket ? 'RK' : isUpay ? 'UP' : 'CRD') + Math.floor(100000000 + Math.random() * 900000000).toString();
         setGeneratedTrx(trx);
         setStep('success');
         triggerConfetti();
@@ -105,7 +107,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <p className="text-xs font-semibold text-white">
                   {isCard
                     ? (isBn ? 'আপনার কার্ডের তথ্য প্রদান করুন' : 'Enter Your Card Details')
-                    : (isBn ? `আপনার ${isBkash ? 'বিকাশ' : 'নগদ'} একাউন্ট নাম্বার দিন` : `Enter your ${isBkash ? 'bKash' : 'Nagad'} Account Number`)}
+                    : (isBn ? `আপনার ${isBkash ? 'বিকাশ' : isNagad ? 'নগদ' : isRocket ? 'রকেট' : 'উপায়'} একাউন্ট নাম্বার দিন` : `Enter your ${isBkash ? 'bKash' : isNagad ? 'Nagad' : isRocket ? 'Rocket' : 'Upay'} Account Number`)}
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   {isBn ? 'একটি ওটিপি (OTP) পাঠানো হবে' : 'A verification OTP code will be sent'}

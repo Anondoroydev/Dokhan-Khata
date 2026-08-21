@@ -244,12 +244,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-slate-950/40 p-4 rounded-2xl border border-slate-800">
                     <div className="flex flex-col items-center gap-2 shrink-0">
                       <div className="relative group w-24 h-24">
-                        <img 
-                          src={formData.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80'} 
-                          alt="Avatar"
-                          referrerPolicy="no-referrer"
-                          className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-xl bg-slate-900"
-                        />
+                        {formData.avatar ? (
+                          <img 
+                            src={formData.avatar} 
+                            alt="Avatar"
+                            referrerPolicy="no-referrer"
+                            className="w-24 h-24 rounded-2xl object-cover border-2 border-emerald-500/50 shadow-xl bg-slate-900"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-2xl border-2 border-emerald-500/50 shadow-xl bg-slate-800 flex items-center justify-center">
+                            <User className="w-12 h-12 text-slate-500" />
+                          </div>
+                        )}
                         <label
                           htmlFor="avatar-file-upload"
                           className="absolute inset-0 bg-black/60 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm cursor-pointer"

@@ -159,12 +159,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenChat }) => {
               {onOpenChat && (
                 <div className="pt-1">
                   <button
-                    onClick={onOpenChat}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-bold text-xs transition-colors"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>{isBn ? 'লাইভ হেল্প ও সাপোর্ট' : 'Live Help Chat'}</span>
-                  </button>
+                  onClick={onOpenChat}
+                  className="group inline-flex items-center justify-center p-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 transition-all duration-300 hover:scale-105 active:scale-95"
+                  title={isBn ? 'লাইভ চ্যাট' : 'Live Chat'}
+                >
+                  <MessageSquare className="w-5 h-5 group-hover:animate-bounce" />
+                </button>
                 </div>
               )}
             </div>
