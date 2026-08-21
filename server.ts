@@ -30,9 +30,7 @@ try {
 }
 
 let currentMongoUri = savedMongoUri || process.env.MONGODB_URI || '';
-if (currentMongoUri.includes('cluster0.mongodb.net')) {
-  currentMongoUri = currentMongoUri.replace('cluster0.mongodb.net', 'cluster0.gbp43.mongodb.net');
-}
+// No forced replacements
 
 // User Mongoose Schema
 const userSchema = new mongoose.Schema(
@@ -188,6 +186,168 @@ const inMemoryUsers: any[] = [
   },
 ];
 
+const inMemoryProducts: any[] = [
+  {
+    id: 'prod-1',
+    name: 'Miniket Rice (Premium)',
+    nameBn: 'মিনিকেট চাল (প্রিমিয়াম)',
+    category: 'grocery',
+    sku: 'RIC-001',
+    barcode: '894123456001',
+    buyPrice: 75,
+    sellPrice: 85,
+    stock: 120,
+    unit: 'Kg',
+    unitBn: 'কেজি',
+    minStockAlert: 15,
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop&q=60',
+    description: 'Fine quality sorted Miniket rice',
+    descriptionBn: 'উন্নতমানের মিনিকেট চাল',
+    isOnlineAvailable: true,
+  },
+  {
+    id: 'prod-2',
+    name: 'Soybean Oil 1L',
+    nameBn: 'সয়াবিন তেল ১ লিটার',
+    category: 'grocery',
+    sku: 'OIL-001',
+    barcode: '894123456002',
+    buyPrice: 165,
+    sellPrice: 180,
+    stock: 45,
+    unit: 'Litre',
+    unitBn: 'লিটার',
+    minStockAlert: 10,
+    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&auto=format&fit=crop&q=60',
+    description: 'Fresh fortified soybean oil',
+    descriptionBn: 'তাজা ও ভিটামিন এ সমৃদ্ধ সয়াবিন তেল',
+    isOnlineAvailable: true,
+  },
+  {
+    id: 'prod-3',
+    name: 'Mosoor Dal (Lentil)',
+    nameBn: 'মসুর ডাল (দেশি)',
+    category: 'grocery',
+    sku: 'DAL-001',
+    barcode: '894123456003',
+    buyPrice: 130,
+    sellPrice: 145,
+    stock: 60,
+    unit: 'Kg',
+    unitBn: 'কেজি',
+    minStockAlert: 10,
+    image: 'https://images.unsplash.com/photo-1585998016839-5141940989bf?w=500&auto=format&fit=crop&q=60',
+    description: 'Cleaned Deshi Mosoor Dal',
+    descriptionBn: 'পরিষ্কার দেশি মসুর ডাল',
+    isOnlineAvailable: true,
+  },
+  {
+    id: 'prod-4',
+    name: 'White Sugar 1Kg',
+    nameBn: 'চিনি ১ কেজি',
+    category: 'grocery',
+    sku: 'SUG-001',
+    barcode: '894123456004',
+    buyPrice: 135,
+    sellPrice: 145,
+    stock: 80,
+    unit: 'Kg',
+    unitBn: 'কেজি',
+    minStockAlert: 10,
+    image: 'https://images.unsplash.com/photo-1581441363689-1f3fef4fb6af?w=500&auto=format&fit=crop&q=60',
+    description: 'Refined crystal white sugar',
+    descriptionBn: 'রিফাইন্ড সাদা চিনি',
+    isOnlineAvailable: true,
+  },
+  {
+    id: 'prod-5',
+    name: 'Fresh Potato 1Kg',
+    nameBn: 'নতুন আলু ১ কেজি',
+    category: 'grocery',
+    sku: 'POT-001',
+    barcode: '894123456005',
+    buyPrice: 45,
+    sellPrice: 55,
+    stock: 200,
+    unit: 'Kg',
+    unitBn: 'কেজি',
+    minStockAlert: 20,
+    image: 'https://images.unsplash.com/photo-1518977676601-b5ff321036b3?w=500&auto=format&fit=crop&q=60',
+    description: 'Fresh local potatoes',
+    descriptionBn: 'তাজা দেশি আলু',
+    isOnlineAvailable: true,
+  },
+  {
+    id: 'prod-6',
+    name: 'Farm Eggs (4 Pcs)',
+    nameBn: 'ফার্ম ডিম (৪ হালি / ডজন)',
+    category: 'grocery',
+    sku: 'EGG-001',
+    barcode: '894123456006',
+    buyPrice: 135,
+    sellPrice: 150,
+    stock: 150,
+    unit: 'Pcs',
+    unitBn: 'পিস',
+    minStockAlert: 25,
+    image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=500&auto=format&fit=crop&q=60',
+    description: 'Fresh poultry farm eggs',
+    descriptionBn: 'তাজা ফার্মের ডিম',
+    isOnlineAvailable: true,
+  }
+];
+
+const inMemoryCustomers: any[] = [
+  {
+    id: 'cust-1',
+    name: 'রফিকুল ইসলাম',
+    phone: '01711223344',
+    address: 'মিরপুর ১০, ঢাকা',
+    dueAmount: 1250,
+    totalPurchases: 14500,
+  },
+  {
+    id: 'cust-2',
+    name: 'নাসরিন সুলতানা',
+    phone: '01822334455',
+    address: 'ধানমন্ডি, ঢাকা',
+    dueAmount: 0,
+    totalPurchases: 8900,
+  }
+];
+
+const inMemoryTransactions: any[] = [];
+const inMemoryOrders: any[] = [];
+const inMemorySettings: any = {
+  storeName: 'DokanKhata Digital Store',
+  storeNameBn: 'দোকানখাতা ডিজিটাল স্টোর',
+  tagline: 'Fresh Groceries & Wholesale POS',
+  taglineBn: 'নিত্য প্রয়োজনীয় পণ্য ও ডিজিটাল হিসাব খাতা',
+  ownerName: 'Shop Owner',
+  phone: '01826339098',
+  email: 'owner@dokankhata.com',
+  address: 'Dhaka, Bangladesh',
+  addressBn: 'ঢাকা, বাংলাদেশ',
+  bkashNumber: '01826339098 (Merchant)',
+  nagadNumber: '01826339098 (Personal)',
+  currency: 'BDT',
+  currencySymbol: '৳',
+  deliveryFee: 40,
+  lowStockThresholdDefault: 10,
+};
+
+function clearBadMongoConfig() {
+  savedMongoUri = '';
+  currentMongoUri = '';
+  process.env.MONGODB_URI = '';
+
+  try {
+    fs.writeFileSync(MONGO_CONFIG_PATH, JSON.stringify({ mongoUri: '' }, null, 2));
+  } catch (e) {
+    console.warn('Could not clear mongo-config.json');
+  }
+}
+
 // Connect to MongoDB function
 async function connectToMongo(uri?: string) {
   let targetUri = uri || savedMongoUri || currentMongoUri || process.env.MONGODB_URI;
@@ -254,11 +414,162 @@ async function connectToMongo(uri?: string) {
       }
       console.log('✅ Initial Admin, Staff, Customer seeded into MongoDB!');
     }
+
+    // Seed default products if empty
+    const prodCount = await ProductModel.countDocuments();
+    if (prodCount === 0) {
+      const defaultProducts = [
+        {
+          id: 'prod-1',
+          name: 'Miniket Rice (Premium)',
+          nameBn: 'মিনিকেট চাল (প্রিমিয়াম)',
+          category: 'grocery',
+          sku: 'RIC-001',
+          barcode: '894123456001',
+          buyPrice: 75,
+          sellPrice: 85,
+          stock: 120,
+          unit: 'Kg',
+          unitBn: 'কেজি',
+          minStockAlert: 15,
+          image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop&q=60',
+          description: 'Fine quality sorted Miniket rice',
+          descriptionBn: 'উন্নতমানের মিনিকেট চাল',
+          isOnlineAvailable: true,
+        },
+        {
+          id: 'prod-2',
+          name: 'Soybean Oil 1L',
+          nameBn: 'সয়াবিন তেল ১ লিটার',
+          category: 'grocery',
+          sku: 'OIL-001',
+          barcode: '894123456002',
+          buyPrice: 165,
+          sellPrice: 180,
+          stock: 45,
+          unit: 'Litre',
+          unitBn: 'লিটার',
+          minStockAlert: 10,
+          image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&auto=format&fit=crop&q=60',
+          description: 'Fresh fortified soybean oil',
+          descriptionBn: 'তাজা ও ভিটামিন এ সমৃদ্ধ সয়াবিন তেল',
+          isOnlineAvailable: true,
+        },
+        {
+          id: 'prod-3',
+          name: 'Mosoor Dal (Lentil)',
+          nameBn: 'মসুর ডাল (দেশি)',
+          category: 'grocery',
+          sku: 'DAL-001',
+          barcode: '894123456003',
+          buyPrice: 130,
+          sellPrice: 145,
+          stock: 60,
+          unit: 'Kg',
+          unitBn: 'কেজি',
+          minStockAlert: 10,
+          image: 'https://images.unsplash.com/photo-1585998016839-5141940989bf?w=500&auto=format&fit=crop&q=60',
+          description: 'Cleaned Deshi Mosoor Dal',
+          descriptionBn: 'পরিষ্কার দেশি মসুর ডাল',
+          isOnlineAvailable: true,
+        },
+        {
+          id: 'prod-4',
+          name: 'White Sugar 1Kg',
+          nameBn: 'চিনি ১ কেজি',
+          category: 'grocery',
+          sku: 'SUG-001',
+          barcode: '894123456004',
+          buyPrice: 135,
+          sellPrice: 145,
+          stock: 80,
+          unit: 'Kg',
+          unitBn: 'কেজি',
+          minStockAlert: 10,
+          image: 'https://images.unsplash.com/photo-1581441363689-1f3fef4fb6af?w=500&auto=format&fit=crop&q=60',
+          description: 'Refined crystal white sugar',
+          descriptionBn: 'রিফাইন্ড সাদা চিনি',
+          isOnlineAvailable: true,
+        },
+        {
+          id: 'prod-5',
+          name: 'Fresh Potato 1Kg',
+          nameBn: 'নতুন আলু ১ কেজি',
+          category: 'grocery',
+          sku: 'POT-001',
+          barcode: '894123456005',
+          buyPrice: 45,
+          sellPrice: 55,
+          stock: 200,
+          unit: 'Kg',
+          unitBn: 'কেজি',
+          minStockAlert: 20,
+          image: 'https://images.unsplash.com/photo-1518977676601-b5ff321036b3?w=500&auto=format&fit=crop&q=60',
+          description: 'Fresh local potatoes',
+          descriptionBn: 'তাজা দেশি আলু',
+          isOnlineAvailable: true,
+        },
+        {
+          id: 'prod-6',
+          name: 'Farm Eggs (4 Pcs)',
+          nameBn: 'ফার্ম ডিম (৪ হালি / ডজন)',
+          category: 'grocery',
+          sku: 'EGG-001',
+          barcode: '894123456006',
+          buyPrice: 135,
+          sellPrice: 150,
+          stock: 150,
+          unit: 'Pcs',
+          unitBn: 'পিস',
+          minStockAlert: 25,
+          image: 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=500&auto=format&fit=crop&q=60',
+          description: 'Fresh poultry farm eggs',
+          descriptionBn: 'তাজা ফার্মের ডিম',
+          isOnlineAvailable: true,
+        }
+      ];
+      await ProductModel.insertMany(defaultProducts);
+      console.log('✅ Initial Products seeded into MongoDB!');
+    }
+
+    // Seed default settings if empty
+    const settingsCount = await SettingsModel.countDocuments();
+    if (settingsCount === 0) {
+      await SettingsModel.create({
+        storeName: 'DokanKhata Digital Store',
+        storeNameBn: 'দোকানখাতা ডিজিটাল স্টোর',
+        tagline: 'Fresh Groceries & Wholesale POS',
+        taglineBn: 'নিত্য প্রয়োজনীয় পণ্য ও ডিজিটাল হিসাব খাতা',
+        ownerName: 'Shop Owner',
+        phone: '01826339098',
+        email: 'owner@dokankhata.com',
+        address: 'Dhaka, Bangladesh',
+        addressBn: 'ঢাকা, বাংলাদেশ',
+        bkashNumber: '01826339098 (Merchant)',
+        nagadNumber: '01826339098 (Personal)',
+        currency: 'BDT',
+        currencySymbol: '৳',
+        deliveryFee: 40,
+        vatPercentage: 0,
+      });
+      console.log('✅ Initial Settings seeded into MongoDB!');
+    }
     return true;
   } catch (err: any) {
+    const errorMessage = err?.message || 'Failed to connect to MongoDB';
+    const isAuthError = /(bad auth|authentication failed|not authorized|auth failed|login failed)/i.test(errorMessage);
+
     isMongoConnected = false;
-    mongoConnectionError = err.message || 'Failed to connect to MongoDB';
-    console.error('⚠️ MongoDB connection error:', err.message);
+    mongoConnectionError = isAuthError
+      ? 'MongoDB authentication failed. Falling back to in-memory mode.'
+      : errorMessage;
+
+    if (isAuthError) {
+      clearBadMongoConfig();
+      console.error('⚠️ MongoDB authentication failed. Cleared bad Mongo config and using in-memory fallback.');
+    } else {
+      console.error('⚠️ MongoDB connection error:', errorMessage);
+    }
     return false;
   }
 }
@@ -282,11 +593,15 @@ if (currentMongoUri) {
 // Health & Database Status Endpoint
 app.get('/api/db-status', async (req, res) => {
   let userCount = inMemoryUsers.length;
+  let productCount = inMemoryProducts.length;
+  let customerCount = inMemoryCustomers.length;
   let dbName = 'in-memory-db';
 
   if (isMongoConnected && mongoose.connection.db) {
     try {
       userCount = await UserModel.countDocuments();
+      productCount = await ProductModel.countDocuments();
+      customerCount = await CustomerModel.countDocuments();
       dbName = mongoose.connection.db.databaseName;
     } catch {
       // fallback
@@ -300,6 +615,8 @@ app.get('/api/db-status', async (req, res) => {
     databaseName: dbName,
     configuredUri: currentMongoUri ? currentMongoUri.replace(/:\/\/.*@/, '://***:***@') : 'Not Configured',
     userCount,
+    productCount,
+    customerCount,
     error: mongoConnectionError,
     timestamp: new Date().toISOString(),
   });
@@ -715,11 +1032,13 @@ app.get('/api/products', async (req, res) => {
   try {
     if (isMongoConnected) {
       const products = await ProductModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, products });
+      if (products && products.length > 0) {
+        return res.json({ success: true, products });
+      }
     }
-    return res.json({ success: true, products: [] });
+    return res.json({ success: true, products: inMemoryProducts });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, products: inMemoryProducts });
   }
 });
 
@@ -734,6 +1053,13 @@ app.post('/api/products', async (req, res) => {
       );
       return res.json({ success: true, product: doc });
     }
+    // Update in-memory fallback
+    const idx = inMemoryProducts.findIndex(p => p.id === productData.id);
+    if (idx !== -1) {
+      inMemoryProducts[idx] = productData;
+    } else {
+      inMemoryProducts.unshift(productData);
+    }
     return res.json({ success: true, product: productData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -745,6 +1071,10 @@ app.delete('/api/products/:id', async (req, res) => {
     const { id } = req.params;
     if (isMongoConnected) {
       await ProductModel.deleteOne({ id });
+    }
+    const idx = inMemoryProducts.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      inMemoryProducts.splice(idx, 1);
     }
     return res.json({ success: true });
   } catch (err: any) {
@@ -759,11 +1089,13 @@ app.get('/api/customers', async (req, res) => {
   try {
     if (isMongoConnected) {
       const customers = await CustomerModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, customers });
+      if (customers && customers.length > 0) {
+        return res.json({ success: true, customers });
+      }
     }
-    return res.json({ success: true, customers: [] });
+    return res.json({ success: true, customers: inMemoryCustomers });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, customers: inMemoryCustomers });
   }
 });
 
@@ -778,6 +1110,12 @@ app.post('/api/customers', async (req, res) => {
       );
       return res.json({ success: true, customer: doc });
     }
+    const idx = inMemoryCustomers.findIndex(c => c.id === customerData.id);
+    if (idx !== -1) {
+      inMemoryCustomers[idx] = customerData;
+    } else {
+      inMemoryCustomers.unshift(customerData);
+    }
     return res.json({ success: true, customer: customerData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -789,6 +1127,10 @@ app.delete('/api/customers/:id', async (req, res) => {
     const { id } = req.params;
     if (isMongoConnected) {
       await CustomerModel.deleteOne({ id });
+    }
+    const idx = inMemoryCustomers.findIndex(c => c.id === id);
+    if (idx !== -1) {
+      inMemoryCustomers.splice(idx, 1);
     }
     return res.json({ success: true });
   } catch (err: any) {
@@ -803,11 +1145,13 @@ app.get('/api/transactions', async (req, res) => {
   try {
     if (isMongoConnected) {
       const transactions = await TransactionModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, transactions });
+      if (transactions && transactions.length > 0) {
+        return res.json({ success: true, transactions });
+      }
     }
-    return res.json({ success: true, transactions: [] });
+    return res.json({ success: true, transactions: inMemoryTransactions });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, transactions: inMemoryTransactions });
   }
 });
 
@@ -815,9 +1159,14 @@ app.post('/api/transactions', async (req, res) => {
   try {
     const txnData = req.body;
     if (isMongoConnected) {
-      const doc = await TransactionModel.create(txnData);
+      const doc = await TransactionModel.findOneAndUpdate(
+        { id: txnData.id },
+        txnData,
+        { upsert: true, new: true }
+      );
       return res.json({ success: true, transaction: doc });
     }
+    inMemoryTransactions.unshift(txnData);
     return res.json({ success: true, transaction: txnData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -831,11 +1180,13 @@ app.get('/api/orders', async (req, res) => {
   try {
     if (isMongoConnected) {
       const orders = await OrderModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, orders });
+      if (orders && orders.length > 0) {
+        return res.json({ success: true, orders });
+      }
     }
-    return res.json({ success: true, orders: [] });
+    return res.json({ success: true, orders: inMemoryOrders });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, orders: inMemoryOrders });
   }
 });
 
@@ -850,6 +1201,7 @@ app.post('/api/orders', async (req, res) => {
       );
       return res.json({ success: true, order: doc });
     }
+    inMemoryOrders.unshift(orderData);
     return res.json({ success: true, order: orderData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -863,11 +1215,13 @@ app.get('/api/settings', async (req, res) => {
   try {
     if (isMongoConnected) {
       const settings = await SettingsModel.findOne({});
-      return res.json({ success: true, settings });
+      if (settings) {
+        return res.json({ success: true, settings });
+      }
     }
-    return res.json({ success: true, settings: null });
+    return res.json({ success: true, settings: inMemorySettings });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, settings: inMemorySettings });
   }
 });
 
@@ -878,7 +1232,8 @@ app.post('/api/settings', async (req, res) => {
       const doc = await SettingsModel.findOneAndUpdate({}, settingsData, { upsert: true, new: true });
       return res.json({ success: true, settings: doc });
     }
-    return res.json({ success: true, settings: settingsData });
+    Object.assign(inMemorySettings, settingsData);
+    return res.json({ success: true, settings: inMemorySettings });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

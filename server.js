@@ -47,9 +47,6 @@ try {
   console.warn("Could not read mongo-config.json");
 }
 var currentMongoUri = savedMongoUri || process.env.MONGODB_URI || "";
-if (currentMongoUri.includes("cluster0.mongodb.net")) {
-  currentMongoUri = currentMongoUri.replace("cluster0.mongodb.net", "cluster0.gbp43.mongodb.net");
-}
 var userSchema = new import_mongoose.default.Schema(
   {
     name: { type: String, required: true },
@@ -189,6 +186,163 @@ var inMemoryUsers = [
     createdAt: (/* @__PURE__ */ new Date()).toISOString()
   }
 ];
+var inMemoryProducts = [
+  {
+    id: "prod-1",
+    name: "Miniket Rice (Premium)",
+    nameBn: "\u09AE\u09BF\u09A8\u09BF\u0995\u09C7\u099F \u099A\u09BE\u09B2 (\u09AA\u09CD\u09B0\u09BF\u09AE\u09BF\u09AF\u09BC\u09BE\u09AE)",
+    category: "grocery",
+    sku: "RIC-001",
+    barcode: "894123456001",
+    buyPrice: 75,
+    sellPrice: 85,
+    stock: 120,
+    unit: "Kg",
+    unitBn: "\u0995\u09C7\u099C\u09BF",
+    minStockAlert: 15,
+    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop&q=60",
+    description: "Fine quality sorted Miniket rice",
+    descriptionBn: "\u0989\u09A8\u09CD\u09A8\u09A4\u09AE\u09BE\u09A8\u09C7\u09B0 \u09AE\u09BF\u09A8\u09BF\u0995\u09C7\u099F \u099A\u09BE\u09B2",
+    isOnlineAvailable: true
+  },
+  {
+    id: "prod-2",
+    name: "Soybean Oil 1L",
+    nameBn: "\u09B8\u09AF\u09BC\u09BE\u09AC\u09BF\u09A8 \u09A4\u09C7\u09B2 \u09E7 \u09B2\u09BF\u099F\u09BE\u09B0",
+    category: "grocery",
+    sku: "OIL-001",
+    barcode: "894123456002",
+    buyPrice: 165,
+    sellPrice: 180,
+    stock: 45,
+    unit: "Litre",
+    unitBn: "\u09B2\u09BF\u099F\u09BE\u09B0",
+    minStockAlert: 10,
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&auto=format&fit=crop&q=60",
+    description: "Fresh fortified soybean oil",
+    descriptionBn: "\u09A4\u09BE\u099C\u09BE \u0993 \u09AD\u09BF\u099F\u09BE\u09AE\u09BF\u09A8 \u098F \u09B8\u09AE\u09C3\u09A6\u09CD\u09A7 \u09B8\u09AF\u09BC\u09BE\u09AC\u09BF\u09A8 \u09A4\u09C7\u09B2",
+    isOnlineAvailable: true
+  },
+  {
+    id: "prod-3",
+    name: "Mosoor Dal (Lentil)",
+    nameBn: "\u09AE\u09B8\u09C1\u09B0 \u09A1\u09BE\u09B2 (\u09A6\u09C7\u09B6\u09BF)",
+    category: "grocery",
+    sku: "DAL-001",
+    barcode: "894123456003",
+    buyPrice: 130,
+    sellPrice: 145,
+    stock: 60,
+    unit: "Kg",
+    unitBn: "\u0995\u09C7\u099C\u09BF",
+    minStockAlert: 10,
+    image: "https://images.unsplash.com/photo-1585998016839-5141940989bf?w=500&auto=format&fit=crop&q=60",
+    description: "Cleaned Deshi Mosoor Dal",
+    descriptionBn: "\u09AA\u09B0\u09BF\u09B7\u09CD\u0995\u09BE\u09B0 \u09A6\u09C7\u09B6\u09BF \u09AE\u09B8\u09C1\u09B0 \u09A1\u09BE\u09B2",
+    isOnlineAvailable: true
+  },
+  {
+    id: "prod-4",
+    name: "White Sugar 1Kg",
+    nameBn: "\u099A\u09BF\u09A8\u09BF \u09E7 \u0995\u09C7\u099C\u09BF",
+    category: "grocery",
+    sku: "SUG-001",
+    barcode: "894123456004",
+    buyPrice: 135,
+    sellPrice: 145,
+    stock: 80,
+    unit: "Kg",
+    unitBn: "\u0995\u09C7\u099C\u09BF",
+    minStockAlert: 10,
+    image: "https://images.unsplash.com/photo-1581441363689-1f3fef4fb6af?w=500&auto=format&fit=crop&q=60",
+    description: "Refined crystal white sugar",
+    descriptionBn: "\u09B0\u09BF\u09AB\u09BE\u0987\u09A8\u09CD\u09A1 \u09B8\u09BE\u09A6\u09BE \u099A\u09BF\u09A8\u09BF",
+    isOnlineAvailable: true
+  },
+  {
+    id: "prod-5",
+    name: "Fresh Potato 1Kg",
+    nameBn: "\u09A8\u09A4\u09C1\u09A8 \u0986\u09B2\u09C1 \u09E7 \u0995\u09C7\u099C\u09BF",
+    category: "grocery",
+    sku: "POT-001",
+    barcode: "894123456005",
+    buyPrice: 45,
+    sellPrice: 55,
+    stock: 200,
+    unit: "Kg",
+    unitBn: "\u0995\u09C7\u099C\u09BF",
+    minStockAlert: 20,
+    image: "https://images.unsplash.com/photo-1518977676601-b5ff321036b3?w=500&auto=format&fit=crop&q=60",
+    description: "Fresh local potatoes",
+    descriptionBn: "\u09A4\u09BE\u099C\u09BE \u09A6\u09C7\u09B6\u09BF \u0986\u09B2\u09C1",
+    isOnlineAvailable: true
+  },
+  {
+    id: "prod-6",
+    name: "Farm Eggs (4 Pcs)",
+    nameBn: "\u09AB\u09BE\u09B0\u09CD\u09AE \u09A1\u09BF\u09AE (\u09EA \u09B9\u09BE\u09B2\u09BF / \u09A1\u099C\u09A8)",
+    category: "grocery",
+    sku: "EGG-001",
+    barcode: "894123456006",
+    buyPrice: 135,
+    sellPrice: 150,
+    stock: 150,
+    unit: "Pcs",
+    unitBn: "\u09AA\u09BF\u09B8",
+    minStockAlert: 25,
+    image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=500&auto=format&fit=crop&q=60",
+    description: "Fresh poultry farm eggs",
+    descriptionBn: "\u09A4\u09BE\u099C\u09BE \u09AB\u09BE\u09B0\u09CD\u09AE\u09C7\u09B0 \u09A1\u09BF\u09AE",
+    isOnlineAvailable: true
+  }
+];
+var inMemoryCustomers = [
+  {
+    id: "cust-1",
+    name: "\u09B0\u09AB\u09BF\u0995\u09C1\u09B2 \u0987\u09B8\u09B2\u09BE\u09AE",
+    phone: "01711223344",
+    address: "\u09AE\u09BF\u09B0\u09AA\u09C1\u09B0 \u09E7\u09E6, \u09A2\u09BE\u0995\u09BE",
+    dueAmount: 1250,
+    totalPurchases: 14500
+  },
+  {
+    id: "cust-2",
+    name: "\u09A8\u09BE\u09B8\u09B0\u09BF\u09A8 \u09B8\u09C1\u09B2\u09A4\u09BE\u09A8\u09BE",
+    phone: "01822334455",
+    address: "\u09A7\u09BE\u09A8\u09AE\u09A8\u09CD\u09A1\u09BF, \u09A2\u09BE\u0995\u09BE",
+    dueAmount: 0,
+    totalPurchases: 8900
+  }
+];
+var inMemoryTransactions = [];
+var inMemoryOrders = [];
+var inMemorySettings = {
+  storeName: "DokanKhata Digital Store",
+  storeNameBn: "\u09A6\u09CB\u0995\u09BE\u09A8\u0996\u09BE\u09A4\u09BE \u09A1\u09BF\u099C\u09BF\u099F\u09BE\u09B2 \u09B8\u09CD\u099F\u09CB\u09B0",
+  tagline: "Fresh Groceries & Wholesale POS",
+  taglineBn: "\u09A8\u09BF\u09A4\u09CD\u09AF \u09AA\u09CD\u09B0\u09DF\u09CB\u099C\u09A8\u09C0\u09DF \u09AA\u09A3\u09CD\u09AF \u0993 \u09A1\u09BF\u099C\u09BF\u099F\u09BE\u09B2 \u09B9\u09BF\u09B8\u09BE\u09AC \u0996\u09BE\u09A4\u09BE",
+  ownerName: "Shop Owner",
+  phone: "01826339098",
+  email: "owner@dokankhata.com",
+  address: "Dhaka, Bangladesh",
+  addressBn: "\u09A2\u09BE\u0995\u09BE, \u09AC\u09BE\u0982\u09B2\u09BE\u09A6\u09C7\u09B6",
+  bkashNumber: "01826339098 (Merchant)",
+  nagadNumber: "01826339098 (Personal)",
+  currency: "BDT",
+  currencySymbol: "\u09F3",
+  deliveryFee: 40,
+  lowStockThresholdDefault: 10
+};
+function clearBadMongoConfig() {
+  savedMongoUri = "";
+  currentMongoUri = "";
+  process.env.MONGODB_URI = "";
+  try {
+    import_fs.default.writeFileSync(MONGO_CONFIG_PATH, JSON.stringify({ mongoUri: "" }, null, 2));
+  } catch (e) {
+    console.warn("Could not clear mongo-config.json");
+  }
+}
 async function connectToMongo(uri) {
   let targetUri = uri || savedMongoUri || currentMongoUri || process.env.MONGODB_URI;
   if (!targetUri) {
@@ -244,11 +398,154 @@ async function connectToMongo(uri) {
       }
       console.log("\u2705 Initial Admin, Staff, Customer seeded into MongoDB!");
     }
+    const prodCount = await ProductModel.countDocuments();
+    if (prodCount === 0) {
+      const defaultProducts = [
+        {
+          id: "prod-1",
+          name: "Miniket Rice (Premium)",
+          nameBn: "\u09AE\u09BF\u09A8\u09BF\u0995\u09C7\u099F \u099A\u09BE\u09B2 (\u09AA\u09CD\u09B0\u09BF\u09AE\u09BF\u09AF\u09BC\u09BE\u09AE)",
+          category: "grocery",
+          sku: "RIC-001",
+          barcode: "894123456001",
+          buyPrice: 75,
+          sellPrice: 85,
+          stock: 120,
+          unit: "Kg",
+          unitBn: "\u0995\u09C7\u099C\u09BF",
+          minStockAlert: 15,
+          image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&auto=format&fit=crop&q=60",
+          description: "Fine quality sorted Miniket rice",
+          descriptionBn: "\u0989\u09A8\u09CD\u09A8\u09A4\u09AE\u09BE\u09A8\u09C7\u09B0 \u09AE\u09BF\u09A8\u09BF\u0995\u09C7\u099F \u099A\u09BE\u09B2",
+          isOnlineAvailable: true
+        },
+        {
+          id: "prod-2",
+          name: "Soybean Oil 1L",
+          nameBn: "\u09B8\u09AF\u09BC\u09BE\u09AC\u09BF\u09A8 \u09A4\u09C7\u09B2 \u09E7 \u09B2\u09BF\u099F\u09BE\u09B0",
+          category: "grocery",
+          sku: "OIL-001",
+          barcode: "894123456002",
+          buyPrice: 165,
+          sellPrice: 180,
+          stock: 45,
+          unit: "Litre",
+          unitBn: "\u09B2\u09BF\u099F\u09BE\u09B0",
+          minStockAlert: 10,
+          image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&auto=format&fit=crop&q=60",
+          description: "Fresh fortified soybean oil",
+          descriptionBn: "\u09A4\u09BE\u099C\u09BE \u0993 \u09AD\u09BF\u099F\u09BE\u09AE\u09BF\u09A8 \u098F \u09B8\u09AE\u09C3\u09A6\u09CD\u09A7 \u09B8\u09AF\u09BC\u09BE\u09AC\u09BF\u09A8 \u09A4\u09C7\u09B2",
+          isOnlineAvailable: true
+        },
+        {
+          id: "prod-3",
+          name: "Mosoor Dal (Lentil)",
+          nameBn: "\u09AE\u09B8\u09C1\u09B0 \u09A1\u09BE\u09B2 (\u09A6\u09C7\u09B6\u09BF)",
+          category: "grocery",
+          sku: "DAL-001",
+          barcode: "894123456003",
+          buyPrice: 130,
+          sellPrice: 145,
+          stock: 60,
+          unit: "Kg",
+          unitBn: "\u0995\u09C7\u099C\u09BF",
+          minStockAlert: 10,
+          image: "https://images.unsplash.com/photo-1585998016839-5141940989bf?w=500&auto=format&fit=crop&q=60",
+          description: "Cleaned Deshi Mosoor Dal",
+          descriptionBn: "\u09AA\u09B0\u09BF\u09B7\u09CD\u0995\u09BE\u09B0 \u09A6\u09C7\u09B6\u09BF \u09AE\u09B8\u09C1\u09B0 \u09A1\u09BE\u09B2",
+          isOnlineAvailable: true
+        },
+        {
+          id: "prod-4",
+          name: "White Sugar 1Kg",
+          nameBn: "\u099A\u09BF\u09A8\u09BF \u09E7 \u0995\u09C7\u099C\u09BF",
+          category: "grocery",
+          sku: "SUG-001",
+          barcode: "894123456004",
+          buyPrice: 135,
+          sellPrice: 145,
+          stock: 80,
+          unit: "Kg",
+          unitBn: "\u0995\u09C7\u099C\u09BF",
+          minStockAlert: 10,
+          image: "https://images.unsplash.com/photo-1581441363689-1f3fef4fb6af?w=500&auto=format&fit=crop&q=60",
+          description: "Refined crystal white sugar",
+          descriptionBn: "\u09B0\u09BF\u09AB\u09BE\u0987\u09A8\u09CD\u09A1 \u09B8\u09BE\u09A6\u09BE \u099A\u09BF\u09A8\u09BF",
+          isOnlineAvailable: true
+        },
+        {
+          id: "prod-5",
+          name: "Fresh Potato 1Kg",
+          nameBn: "\u09A8\u09A4\u09C1\u09A8 \u0986\u09B2\u09C1 \u09E7 \u0995\u09C7\u099C\u09BF",
+          category: "grocery",
+          sku: "POT-001",
+          barcode: "894123456005",
+          buyPrice: 45,
+          sellPrice: 55,
+          stock: 200,
+          unit: "Kg",
+          unitBn: "\u0995\u09C7\u099C\u09BF",
+          minStockAlert: 20,
+          image: "https://images.unsplash.com/photo-1518977676601-b5ff321036b3?w=500&auto=format&fit=crop&q=60",
+          description: "Fresh local potatoes",
+          descriptionBn: "\u09A4\u09BE\u099C\u09BE \u09A6\u09C7\u09B6\u09BF \u0986\u09B2\u09C1",
+          isOnlineAvailable: true
+        },
+        {
+          id: "prod-6",
+          name: "Farm Eggs (4 Pcs)",
+          nameBn: "\u09AB\u09BE\u09B0\u09CD\u09AE \u09A1\u09BF\u09AE (\u09EA \u09B9\u09BE\u09B2\u09BF / \u09A1\u099C\u09A8)",
+          category: "grocery",
+          sku: "EGG-001",
+          barcode: "894123456006",
+          buyPrice: 135,
+          sellPrice: 150,
+          stock: 150,
+          unit: "Pcs",
+          unitBn: "\u09AA\u09BF\u09B8",
+          minStockAlert: 25,
+          image: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=500&auto=format&fit=crop&q=60",
+          description: "Fresh poultry farm eggs",
+          descriptionBn: "\u09A4\u09BE\u099C\u09BE \u09AB\u09BE\u09B0\u09CD\u09AE\u09C7\u09B0 \u09A1\u09BF\u09AE",
+          isOnlineAvailable: true
+        }
+      ];
+      await ProductModel.insertMany(defaultProducts);
+      console.log("\u2705 Initial Products seeded into MongoDB!");
+    }
+    const settingsCount = await SettingsModel.countDocuments();
+    if (settingsCount === 0) {
+      await SettingsModel.create({
+        storeName: "DokanKhata Digital Store",
+        storeNameBn: "\u09A6\u09CB\u0995\u09BE\u09A8\u0996\u09BE\u09A4\u09BE \u09A1\u09BF\u099C\u09BF\u099F\u09BE\u09B2 \u09B8\u09CD\u099F\u09CB\u09B0",
+        tagline: "Fresh Groceries & Wholesale POS",
+        taglineBn: "\u09A8\u09BF\u09A4\u09CD\u09AF \u09AA\u09CD\u09B0\u09DF\u09CB\u099C\u09A8\u09C0\u09DF \u09AA\u09A3\u09CD\u09AF \u0993 \u09A1\u09BF\u099C\u09BF\u099F\u09BE\u09B2 \u09B9\u09BF\u09B8\u09BE\u09AC \u0996\u09BE\u09A4\u09BE",
+        ownerName: "Shop Owner",
+        phone: "01826339098",
+        email: "owner@dokankhata.com",
+        address: "Dhaka, Bangladesh",
+        addressBn: "\u09A2\u09BE\u0995\u09BE, \u09AC\u09BE\u0982\u09B2\u09BE\u09A6\u09C7\u09B6",
+        bkashNumber: "01826339098 (Merchant)",
+        nagadNumber: "01826339098 (Personal)",
+        currency: "BDT",
+        currencySymbol: "\u09F3",
+        deliveryFee: 40,
+        vatPercentage: 0
+      });
+      console.log("\u2705 Initial Settings seeded into MongoDB!");
+    }
     return true;
   } catch (err) {
+    const errorMessage = err?.message || "Failed to connect to MongoDB";
+    const isAuthError = /(bad auth|authentication failed|not authorized|auth failed|login failed)/i.test(errorMessage);
     isMongoConnected = false;
-    mongoConnectionError = err.message || "Failed to connect to MongoDB";
-    console.error("\u26A0\uFE0F MongoDB connection error:", err.message);
+    mongoConnectionError = isAuthError ? "MongoDB authentication failed. Falling back to in-memory mode." : errorMessage;
+    if (isAuthError) {
+      clearBadMongoConfig();
+      console.error("\u26A0\uFE0F MongoDB authentication failed. Cleared bad Mongo config and using in-memory fallback.");
+    } else {
+      console.error("\u26A0\uFE0F MongoDB connection error:", errorMessage);
+    }
     return false;
   }
 }
@@ -258,10 +555,14 @@ if (currentMongoUri) {
 }
 app.get("/api/db-status", async (req, res) => {
   let userCount = inMemoryUsers.length;
+  let productCount = inMemoryProducts.length;
+  let customerCount = inMemoryCustomers.length;
   let dbName = "in-memory-db";
   if (isMongoConnected && import_mongoose.default.connection.db) {
     try {
       userCount = await UserModel.countDocuments();
+      productCount = await ProductModel.countDocuments();
+      customerCount = await CustomerModel.countDocuments();
       dbName = import_mongoose.default.connection.db.databaseName;
     } catch {
     }
@@ -273,6 +574,8 @@ app.get("/api/db-status", async (req, res) => {
     databaseName: dbName,
     configuredUri: currentMongoUri ? currentMongoUri.replace(/:\/\/.*@/, "://***:***@") : "Not Configured",
     userCount,
+    productCount,
+    customerCount,
     error: mongoConnectionError,
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   });
@@ -604,11 +907,13 @@ app.get("/api/products", async (req, res) => {
   try {
     if (isMongoConnected) {
       const products = await ProductModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, products });
+      if (products && products.length > 0) {
+        return res.json({ success: true, products });
+      }
     }
-    return res.json({ success: true, products: [] });
+    return res.json({ success: true, products: inMemoryProducts });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, products: inMemoryProducts });
   }
 });
 app.post("/api/products", async (req, res) => {
@@ -622,6 +927,12 @@ app.post("/api/products", async (req, res) => {
       );
       return res.json({ success: true, product: doc });
     }
+    const idx = inMemoryProducts.findIndex((p) => p.id === productData.id);
+    if (idx !== -1) {
+      inMemoryProducts[idx] = productData;
+    } else {
+      inMemoryProducts.unshift(productData);
+    }
     return res.json({ success: true, product: productData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -633,6 +944,10 @@ app.delete("/api/products/:id", async (req, res) => {
     if (isMongoConnected) {
       await ProductModel.deleteOne({ id });
     }
+    const idx = inMemoryProducts.findIndex((p) => p.id === id);
+    if (idx !== -1) {
+      inMemoryProducts.splice(idx, 1);
+    }
     return res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -642,11 +957,13 @@ app.get("/api/customers", async (req, res) => {
   try {
     if (isMongoConnected) {
       const customers = await CustomerModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, customers });
+      if (customers && customers.length > 0) {
+        return res.json({ success: true, customers });
+      }
     }
-    return res.json({ success: true, customers: [] });
+    return res.json({ success: true, customers: inMemoryCustomers });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, customers: inMemoryCustomers });
   }
 });
 app.post("/api/customers", async (req, res) => {
@@ -660,6 +977,12 @@ app.post("/api/customers", async (req, res) => {
       );
       return res.json({ success: true, customer: doc });
     }
+    const idx = inMemoryCustomers.findIndex((c) => c.id === customerData.id);
+    if (idx !== -1) {
+      inMemoryCustomers[idx] = customerData;
+    } else {
+      inMemoryCustomers.unshift(customerData);
+    }
     return res.json({ success: true, customer: customerData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -671,6 +994,10 @@ app.delete("/api/customers/:id", async (req, res) => {
     if (isMongoConnected) {
       await CustomerModel.deleteOne({ id });
     }
+    const idx = inMemoryCustomers.findIndex((c) => c.id === id);
+    if (idx !== -1) {
+      inMemoryCustomers.splice(idx, 1);
+    }
     return res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -680,20 +1007,27 @@ app.get("/api/transactions", async (req, res) => {
   try {
     if (isMongoConnected) {
       const transactions = await TransactionModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, transactions });
+      if (transactions && transactions.length > 0) {
+        return res.json({ success: true, transactions });
+      }
     }
-    return res.json({ success: true, transactions: [] });
+    return res.json({ success: true, transactions: inMemoryTransactions });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, transactions: inMemoryTransactions });
   }
 });
 app.post("/api/transactions", async (req, res) => {
   try {
     const txnData = req.body;
     if (isMongoConnected) {
-      const doc = await TransactionModel.create(txnData);
+      const doc = await TransactionModel.findOneAndUpdate(
+        { id: txnData.id },
+        txnData,
+        { upsert: true, new: true }
+      );
       return res.json({ success: true, transaction: doc });
     }
+    inMemoryTransactions.unshift(txnData);
     return res.json({ success: true, transaction: txnData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -703,11 +1037,13 @@ app.get("/api/orders", async (req, res) => {
   try {
     if (isMongoConnected) {
       const orders = await OrderModel.find({}).sort({ createdAt: -1 });
-      return res.json({ success: true, orders });
+      if (orders && orders.length > 0) {
+        return res.json({ success: true, orders });
+      }
     }
-    return res.json({ success: true, orders: [] });
+    return res.json({ success: true, orders: inMemoryOrders });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, orders: inMemoryOrders });
   }
 });
 app.post("/api/orders", async (req, res) => {
@@ -721,6 +1057,7 @@ app.post("/api/orders", async (req, res) => {
       );
       return res.json({ success: true, order: doc });
     }
+    inMemoryOrders.unshift(orderData);
     return res.json({ success: true, order: orderData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -730,11 +1067,13 @@ app.get("/api/settings", async (req, res) => {
   try {
     if (isMongoConnected) {
       const settings = await SettingsModel.findOne({});
-      return res.json({ success: true, settings });
+      if (settings) {
+        return res.json({ success: true, settings });
+      }
     }
-    return res.json({ success: true, settings: null });
+    return res.json({ success: true, settings: inMemorySettings });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.json({ success: true, settings: inMemorySettings });
   }
 });
 app.post("/api/settings", async (req, res) => {
@@ -744,7 +1083,8 @@ app.post("/api/settings", async (req, res) => {
       const doc = await SettingsModel.findOneAndUpdate({}, settingsData, { upsert: true, new: true });
       return res.json({ success: true, settings: doc });
     }
-    return res.json({ success: true, settings: settingsData });
+    Object.assign(inMemorySettings, settingsData);
+    return res.json({ success: true, settings: inMemorySettings });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
