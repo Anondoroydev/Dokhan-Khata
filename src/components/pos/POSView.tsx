@@ -180,7 +180,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
         </div>
 
         {/* Product Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[620px] overflow-y-auto p-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 max-h-[620px] overflow-y-auto p-1">
           {filteredProducts.map((prod) => {
             const isOutOfStock = prod.stock <= 0;
             const isLowStock = prod.stock <= prod.minStockAlert && !isOutOfStock;
@@ -190,7 +190,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
               <div
                 key={prod.id}
                 onClick={() => !isOutOfStock && handleAddToCart(prod)}
-                className={`group relative bg-slate-900/60 backdrop-blur-xl p-3 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between shadow-lg shadow-black/10 ${
+                className={`group relative bg-slate-900/60 backdrop-blur-xl p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between shadow-lg shadow-black/10 ${
                   isOutOfStock
                     ? 'opacity-40 border-white/5 cursor-not-allowed bg-slate-950/60'
                     : inCartItem
@@ -199,7 +199,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
                 }`}
               >
                 <div>
-                  <div className="relative aspect-4/3 w-full rounded-xl overflow-hidden bg-slate-950/60 mb-2.5 border border-white/10">
+                  <div className="relative aspect-4/3 w-full rounded-lg sm:rounded-xl overflow-hidden bg-slate-950/60 mb-2 sm:mb-2.5 border border-white/10">
                     <img
                       src={prod.image}
                       alt={prod.name}
@@ -207,36 +207,36 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     {isLowStock && (
-                      <span className="absolute top-1.5 right-1.5 px-2 py-0.5 bg-amber-500 text-slate-950 text-[9px] font-bold rounded-md shadow-xs">
+                      <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 px-1.5 sm:px-2 py-0.5 bg-amber-500 text-slate-950 text-[8px] sm:text-[9px] font-bold rounded-md shadow-xs">
                         {isBn ? 'স্বল্প স্টক' : 'Low'}
                       </span>
                     )}
                     {isOutOfStock && (
-                      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center text-white text-[11px] font-bold">
+                      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center text-white text-[10px] sm:text-[11px] font-bold">
                         {t.pos.outOfStock}
                       </div>
                     )}
                   </div>
 
-                  <h4 className="font-bold text-xs text-white line-clamp-1">
+                  <h4 className="font-bold text-[11px] sm:text-xs text-white line-clamp-1">
                     {isBn ? prod.nameBn || prod.name : prod.name}
                   </h4>
-                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono mt-0.5 truncate">
                     {prod.sku} • {isBn ? `${prod.stock} ${prod.unitBn || prod.unit}` : `${prod.stock} ${prod.unit}`}
                   </p>
                 </div>
 
-                <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between">
-                  <span className="text-sm font-extrabold font-mono text-emerald-400">
+                <div className="mt-2 pt-1.5 sm:pt-2 border-t border-white/10 flex items-center justify-between gap-1">
+                  <span className="text-xs sm:text-sm font-extrabold font-mono text-emerald-400 truncate">
                     ৳{prod.sellPrice}
                   </span>
                   {inCartItem ? (
-                    <span className="px-2 py-0.5 bg-emerald-500 text-slate-950 text-[11px] font-black rounded-lg font-mono">
+                    <span className="px-1.5 sm:px-2 py-0.5 bg-emerald-500 text-slate-950 text-[10px] sm:text-[11px] font-black rounded-lg font-mono shrink-0">
                       {inCartItem.quantity}
                     </span>
                   ) : (
-                    <span className="w-6 h-6 rounded-lg bg-white/10 group-hover:bg-emerald-500 group-hover:text-slate-950 text-slate-300 flex items-center justify-center transition-colors border border-white/10">
-                      <Plus className="w-3.5 h-3.5" />
+                    <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-white/10 group-hover:bg-emerald-500 group-hover:text-slate-950 text-slate-300 flex items-center justify-center transition-colors border border-white/10 shrink-0">
+                      <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </span>
                   )}
                 </div>

@@ -198,28 +198,28 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                   <h1 className="text-xs sm:text-base font-black text-white tracking-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">
                     {currentTab.title}
                   </h1>
-                  <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-bold border border-emerald-500/20">
+                  <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-bold border border-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>{isOnline ? (isBn ? 'লাইভ ক্লাউড' : 'Live Sync') : (isBn ? 'অফলাইন' : 'Offline')}</span>
                   </span>
                   <button 
                     onClick={onOpenSettings}
-                    className="hidden lg:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 text-[10px] font-bold border border-teal-500/20 transition-colors cursor-pointer"
+                    className="hidden xl:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 text-[10px] font-bold border border-teal-500/20 transition-colors cursor-pointer"
                     title={isBn ? 'MongoDB ডাটাবেস সেটআপ' : 'Configure MongoDB Database'}
                   >
                     <Database className="w-2.5 h-2.5 text-teal-400" />
                     <span>{mongoStatus.isConnected ? 'MongoDB Active' : 'MongoDB Config'}</span>
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-400 truncate hidden md:block">
+                <p className="text-[11px] text-slate-400 truncate hidden xl:block">
                   {currentTab.subtitle}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Center: Global Header Search Bar */}
-          <div className="hidden xl:block flex-1 max-w-xs relative" ref={searchRef}>
+          {/* Center: Global Header Search Bar (visible on lg and xl) */}
+          <div className="hidden lg:block flex-1 max-w-[200px] xl:max-w-xs relative shrink-0" ref={searchRef}>
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -328,12 +328,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
 
           {/* Right Action Icons & Utility Controls */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             
-            {/* Mobile Search Toggle Button (xl:hidden) */}
+            {/* Mobile Search Toggle Button (lg:hidden - shown on mobile & tablets < 1024px) */}
             <button
               onClick={() => setShowMobileSearch(true)}
-              className="xl:hidden p-1.5 sm:p-2 text-slate-300 hover:text-white rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 text-slate-300 hover:text-white rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
               title="Search Products & Customers"
             >
               <Search className="w-4 h-4 text-emerald-400" />
@@ -343,22 +343,21 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             {activeTab !== 'pos' && currentRole !== 'customer' && (
               <button
                 onClick={() => setActiveTab('pos')}
-                className="inline-flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-black rounded-xl shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t.dashboard.newSale}</span>
+                <span className="hidden xl:inline">{t.dashboard.newSale}</span>
               </button>
             )}
 
             {/* Language Switcher Pill */}
             <button
               onClick={() => setLanguage(language === 'bn' ? 'en' : 'bn')}
-              className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold border border-white/10 transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-bold border border-white/10 transition-colors cursor-pointer"
               title="Toggle Language"
             >
               <Globe className="w-3.5 h-3.5 text-sky-400" />
-              <span className="text-[10px] sm:text-[11px] font-bold sm:inline hidden">{language === 'bn' ? 'English' : 'বাংলা'}</span>
-              <span className="text-[10px] font-bold sm:hidden">{language === 'bn' ? 'EN' : 'বাং'}</span>
+              <span className="text-[10px] font-bold">{language === 'bn' ? 'EN' : 'বাং'}</span>
             </button>
 
             {/* Role Switcher Pill (Admin / Staff only) */}
@@ -370,10 +369,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     setShowNotifications(false);
                     setShowUserMenu(false);
                   }}
-                  className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold border border-emerald-500/30 transition-colors backdrop-blur-md cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold border border-emerald-500/30 transition-colors backdrop-blur-md cursor-pointer"
                 >
                   <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="capitalize hidden md:inline">{t.roles[currentRole]}</span>
+                  <span className="capitalize hidden xl:inline">{t.roles[currentRole]}</span>
                   <ChevronDown className="w-3 h-3 text-emerald-400" />
                 </button>
 

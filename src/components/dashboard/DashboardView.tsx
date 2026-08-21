@@ -284,9 +284,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           </div>
 
-          {/* Time Range Pills Switcher */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
-            <div className="bg-slate-950/60 p-1 rounded-2xl border border-white/15 backdrop-blur-xl flex items-center overflow-x-auto no-scrollbar">
+          {/* Time Range Pills Switcher & Quick Action Shortcuts */}
+          <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-2.5 sm:gap-3 max-w-full">
+            <div className="bg-slate-950/60 p-1 rounded-2xl border border-white/15 backdrop-blur-xl flex items-center overflow-x-auto no-scrollbar max-w-full shrink-0">
               {(
                 [
                   { id: 'today', labelBn: 'আজকে', labelEn: 'Today' },
@@ -298,7 +298,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setTimeRange(tab.id)}
-                  className={`flex-1 sm:flex-none px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+                  className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                     timeRange === tab.id
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-950/50'
                       : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -310,19 +310,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* Quick Action Shortcuts */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 flex-wrap sm:flex-nowrap">
               <button
                 onClick={() => setActiveTab('pos')}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98]"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap cursor-pointer"
               >
-                <ShoppingCart className="w-4 h-4" />
+                <ShoppingCart className="w-4 h-4 shrink-0" />
                 <span>{t.dashboard.newSale}</span>
               </button>
               <button
                 onClick={onOpenAddBaki}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all border border-white/15 backdrop-blur-md"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all border border-white/15 backdrop-blur-md whitespace-nowrap cursor-pointer"
               >
-                <ArrowUpRight className="w-4 h-4 text-amber-300" />
+                <ArrowUpRight className="w-4 h-4 text-amber-300 shrink-0" />
                 <span>{t.dashboard.addBaki}</span>
               </button>
             </div>
