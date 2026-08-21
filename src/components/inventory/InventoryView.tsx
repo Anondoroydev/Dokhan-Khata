@@ -479,13 +479,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
       {/* Add / Edit Product Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-6 overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+          <div className="relative w-full max-w-lg bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-white/20 shadow-2xl p-6 overflow-hidden max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
               <h3 className="font-bold text-base text-white">
                 {editingProduct ? t.inventory.updateProduct : t.inventory.addProduct}
               </h3>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 ✕
               </button>
             </div>
