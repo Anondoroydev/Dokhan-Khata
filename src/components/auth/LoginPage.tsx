@@ -113,9 +113,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-slate-950 relative">
+    <div className="min-h-screen w-full flex items-center justify-center px-3 py-5 sm:px-5 sm:py-8 bg-slate-950 relative">
       {/* Top Bar for Guest Exit & Language */}
-      <div className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-6 flex items-center justify-between z-10">
+      <div className="absolute top-3 left-3 right-3 sm:top-5 sm:left-5 sm:right-5 flex items-center justify-between z-10">
         {onContinueAsGuest && (
           <button
             type="button"
@@ -138,7 +138,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       </div>
 
       {/* Main Single Clean Form Box */}
-      <div className="w-full max-w-md my-8">
+      <div className="w-full max-w-md my-10 sm:my-12">
         {/* Brand Header */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/20 mb-3">
@@ -155,7 +155,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         </div>
 
         {/* Form Container */}
-        <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-slate-900 border border-white/10 rounded-3xl p-5 sm:p-7 shadow-2xl">
           {/* Messages */}
           {errorMsg && (
             <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
