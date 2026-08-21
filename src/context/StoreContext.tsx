@@ -394,33 +394,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string>(new Date().toISOString());
 
-  // Load from local storage on mount (Sanitizing and removing fake/mock items)
+  // Load from local storage on mount
   useEffect(() => {
     try {
       const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        // Filter out legacy mock data IDs
-        const fakeProdRegex = /^prod-[1-9]\d*$/;
-        const fakeCustRegex = /^cust-[1-9]\d*$/;
-        const fakeTxnRegex = /^txn-10[1-9]$/;
-        const fakeOrdRegex = /^ord-100[1-9]$/;
-
-        if (parsed.products && Array.isArray(parsed.products)) {
-          setProducts(parsed.products.filter((p: Product) => !fakeProdRegex.test(p.id)));
+        if (parsed.products && Array.isArray(parsed.products) && parsed.products.length > 0) {
+          setProducts(parsed.products);
         }
         if (parsed.customers && Array.isArray(parsed.customers)) {
-          setCustomers(parsed.customers.filter((c: Customer) => !fakeCustRegex.test(c.id)));
+          setCustomers(parsed.customers);
         }
         if (parsed.transactions && Array.isArray(parsed.transactions)) {
-          setTransactions(parsed.transactions.filter((t: Transaction) => !fakeTxnRegex.test(t.id)));
+          setTransactions(parsed.transactions);
         }
         if (parsed.orders && Array.isArray(parsed.orders)) {
-          setOrders(parsed.orders.filter((o: Order) => !fakeOrdRegex.test(o.id)));
+          setOrders(parsed.orders);
         }
         if (parsed.settings) setSettings(parsed.settings);
         if (parsed.chatMessages && Array.isArray(parsed.chatMessages)) {
-          setChatMessages(parsed.chatMessages.filter((m: ChatMessage) => m.id !== 'msg-1'));
+          setChatMessages(parsed.chatMessages);
         }
         if (parsed.cart && Array.isArray(parsed.cart)) {
           setCart(parsed.cart);
