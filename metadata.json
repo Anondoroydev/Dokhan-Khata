@@ -1,0 +1,6 @@
+{
+  "name": "DokanKhata - Store & Ledger Management",
+  "description": "Comprehensive retail store inventory, Baki (Due) ledger Khata, online customer ordering, POS billing, real-time chat, and financial reporting system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
