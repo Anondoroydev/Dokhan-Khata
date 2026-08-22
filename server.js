@@ -42,6 +42,7 @@ var import_vite = require("vite");
 import_dotenv.default.config();
 var app = (0, import_express.default)();
 var PORT = Number(process.env.PORT || 3e3);
+var isVercelServerless = Boolean(process.env.VERCEL);
 app.use(import_express.default.json({ limit: "10mb" }));
 app.use(import_express.default.urlencoded({ extended: true, limit: "10mb" }));
 var isMongoConnected = false;
@@ -559,7 +560,7 @@ async function connectToMongo(uri) {
     return false;
   }
 }
-if (currentMongoUri) {
+if (currentMongoUri && !isVercelServerless) {
   connectToMongo(currentMongoUri).catch(() => {
   });
 }
@@ -1113,11 +1114,15 @@ async function startServer() {
       res.sendFile(import_path.default.join(distPath, "index.html"));
     });
   }
+  if (isVercelServerless) {
+    return app;
+  }
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`\u{1F680} DokanKhata Full-Stack Server running on port ${PORT}`);
   });
+  return app;
 }
-if (require.main === module) {
+if (require.main === module && !isVercelServerless) {
   startServer();
 }
 // Annotate the CommonJS export names for ESM import in node:

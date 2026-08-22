@@ -10,6 +10,7 @@ dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+const isVercelServerless = Boolean(process.env.VERCEL);
 export { app };
 
 app.use(express.json({ limit: '10mb' }));
@@ -583,7 +584,7 @@ async function ensureMongoConnected() {
 }
 
 // Initial async connect attempt (non-blocking)
-if (currentMongoUri) {
+if (currentMongoUri && !isVercelServerless) {
   connectToMongo(currentMongoUri).catch(() => {});
 }
 
@@ -1256,11 +1257,16 @@ async function startServer() {
     });
   }
 
+  if (isVercelServerless) {
+    return app;
+  }
+
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 DokanKhata Full-Stack Server running on port ${PORT}`);
   });
+  return app;
 }
 
-if (require.main === module) {
+if (require.main === module && !isVercelServerless) {
   startServer();
 }
