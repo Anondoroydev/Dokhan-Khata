@@ -4,6 +4,10 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -20,8 +24,14 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // server.ts
+var server_exports = {};
+__export(server_exports, {
+  app: () => app
+});
+module.exports = __toCommonJS(server_exports);
 var import_express = __toESM(require("express"));
 var import_path = __toESM(require("path"));
 var import_fs = __toESM(require("fs"));
@@ -31,7 +41,7 @@ var import_dotenv = __toESM(require("dotenv"));
 var import_vite = require("vite");
 import_dotenv.default.config();
 var app = (0, import_express.default)();
-var PORT = 3e3;
+var PORT = Number(process.env.PORT || 3e3);
 app.use(import_express.default.json({ limit: "10mb" }));
 app.use(import_express.default.urlencoded({ extended: true, limit: "10mb" }));
 var isMongoConnected = false;
@@ -1107,4 +1117,10 @@ async function startServer() {
     console.log(`\u{1F680} DokanKhata Full-Stack Server running on port ${PORT}`);
   });
 }
-startServer();
+if (require.main === module) {
+  startServer();
+}
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  app
+});
