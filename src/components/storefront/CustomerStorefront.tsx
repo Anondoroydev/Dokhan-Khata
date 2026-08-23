@@ -57,6 +57,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     openLoginModal,
     setIsProfileModalOpen,
     logout,
+  updateOrderStatus,
   } = useStore();
 
   const isBn = language === 'bn';
@@ -462,12 +463,38 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
                         <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
                           <span>{isBn ? 'মোট প্রদেয়' : 'Total Payable'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
-                          <button
-                            onClick={() => onOpenReceipt(ord)}
-                            className="text-emerald-400 hover:text-emerald-300 transition-colors"
-                          >
-                            {isBn ? 'রসিদ দেখুন →' : 'View Invoice →'}
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => onOpenReceipt(ord)}
+                              className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                            >
+                              {isBn ? 'রসিদ দেখুন →' : 'View Invoice →'}
+                            </button>
+
+                            {/* Cancel button for customer to cancel their order before delivery */}
+                            {ord.status !== 'delivered' && ord.status !== 'cancelled' && (
+                              <button
+                                onClick={() => {
+                                  const confirmMsg = isBn
+                                    ? 'আপনি কি নিশ্চিত যে আপনি এই অর্ডারটি বাতিল করতে চান? (আপনি পুনরায় অর্ডার করতে পারবেন)'
+                                    : 'Are you sure you want to cancel this order? You can reorder later.';
+                                  if (window.confirm(confirmMsg)) {
+                                    // call existing updateOrderStatus from context
+                                    try {
+                                      updateOrderStatus(ord.id, 'cancelled');
+                                      toast.success(isBn ? 'অর্ডার বাতিল করা হয়েছে' : 'Order cancelled successfully');
+                                    } catch (e) {
+                                      console.error('Cancel order error', e);
+                                      toast.error(isBn ? 'অর্ডার বাতিল হয়নি. পুনরায় চেষ্টা করুন।' : 'Failed to cancel order. Please try again.');
+                                    }
+                                  }
+                                }}
+                                className="text-rose-400 hover:text-rose-300 transition-colors"
+                              >
+                                {isBn ? 'অর্ডার বাতিল করুন' : 'Cancel Order'}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))
@@ -527,7 +554,62 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                       {isBn ? 'এখনো আপনার কোনো সম্পন্ন/সফল অর্ডার নেই।' : 'No completed orders yet.'}
                     </div>
                   )}
+
                 </div>
+
+                {/* Cancelled Orders Section */}
+                <div className="pt-6 border-t border-white/10 space-y-4">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-rose-400 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-400" />
+                    <span>{isBn ? 'বাতিলকৃত অর্ডারসমূহ' : 'Cancelled Orders'}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px]">
+                      {orders.filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status === 'cancelled').length}
+                    </span>
+                  </h4>
+
+                  {orders.filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status === 'cancelled').length > 0 ? (
+                    orders
+                      .filter((o) => (o.customerId === currentUser.id || o.customerPhone === currentUser.emailOrPhone) && o.status === 'cancelled')
+                      .map((ord) => (
+                        <div key={ord.id} className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/[0.03] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-bold font-mono text-sm text-white">{ord.orderNumber}</span>
+                              <span className="text-xs text-slate-400 block">{new Date(ord.orderDate).toLocaleString()}</span>
+                            </div>
+                            <span className="px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-xs rounded-full uppercase flex items-center gap-1">
+                              <span>✕ {isBn ? 'বাতিল (Cancelled)' : 'Cancelled'}</span>
+                            </span>
+                          </div>
+
+                          <div className="divide-y divide-white/10 text-xs">
+                            {ord.items.map((item, idx) => (
+                              <div key={idx} className="py-1 flex justify-between text-slate-300">
+                                <span>{isBn ? item.productNameBn || item.productName : item.productName} ({item.quantity}x)</span>
+                                <span className="font-mono font-semibold text-white">৳{item.total}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
+                            <span>{isBn ? 'মোট' : 'Total'}: <strong className="text-rose-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
+                            <button
+                              onClick={() => onOpenReceipt(ord)}
+                              className="text-rose-400 hover:text-rose-300 transition-colors"
+                            >
+                              {isBn ? 'ইনভয়েস দেখুন →' : 'View Invoice →'}
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="p-4 rounded-2xl border border-dashed border-white/10 text-center text-xs text-slate-500">
+                      {isBn ? 'আপনার কোনো বাতিল করা অর্ডার দেখছি না।' : 'No cancelled orders.'}
+                    </div>
+                  )}
+
+                </div>
+
               </div>
             </div>
           )}
