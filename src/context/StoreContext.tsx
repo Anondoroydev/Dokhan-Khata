@@ -364,6 +364,114 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchAllFromBackend();
   }, []);
 
+  // Subscribe to server-sent events for realtime updates (no manual reload required)
+  useEffect(() => {
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource('/events');
+
+      const upsertFn = <T extends any>(setList: React.Dispatch<React.SetStateAction<T[]>>, item: any) => {
+        setList((prev: any[]) => {
+          const idx = prev.findIndex((p) => p.id === item.id || p._id === item.id || p.id === item._id || p._id === item._id);
+          if (idx !== -1) {
+            const copy = [...prev];
+            copy[idx] = item;
+            return copy;
+          }
+          return [item, ...prev];
+        });
+      };
+
+      const deleteFn = <T extends any>(setList: React.Dispatch<React.SetStateAction<T[]>>, id: string) => {
+        setList((prev: any[]) => prev.filter((p) => p.id !== id && p._id !== id));
+      };
+
+      es.addEventListener('products', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.action === 'upsert' && payload.product) {
+            upsertFn(setProducts, payload.product);
+          } else if (payload?.action === 'delete' && payload.id) {
+            deleteFn(setProducts, payload.id);
+          }
+        } catch (e) {
+          console.warn('Failed to parse products SSE', e);
+        }
+      });
+
+      es.addEventListener('customers', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.action === 'upsert' && payload.customer) {
+            upsertFn(setCustomers, payload.customer);
+          } else if (payload?.action === 'delete' && payload.id) {
+            deleteFn(setCustomers, payload.id);
+          }
+        } catch (e) {
+          console.warn('Failed to parse customers SSE', e);
+        }
+      });
+
+      es.addEventListener('transactions', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.action === 'upsert' && payload.transaction) {
+            upsertFn(setTransactions, payload.transaction);
+          }
+        } catch (e) {
+          console.warn('Failed to parse transactions SSE', e);
+        }
+      });
+
+      es.addEventListener('orders', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.action === 'upsert' && payload.order) {
+            upsertFn(setOrders, payload.order);
+          }
+        } catch (e) {
+          console.warn('Failed to parse orders SSE', e);
+        }
+      });
+
+      es.addEventListener('settings', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.action === 'upsert' && payload.settings) {
+            setSettings(payload.settings);
+          }
+        } catch (e) {
+          console.warn('Failed to parse settings SSE', e);
+        }
+      });
+
+      es.addEventListener('users', (ev: MessageEvent) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.action === 'upsert' && payload.user) {
+            upsertFn(setUsers, payload.user);
+          } else if (payload?.action === 'delete' && (payload.id || payload.emailOrPhone)) {
+            setUsers((prev: any[]) => prev.filter((u) => u.id !== payload.id && u.emailOrPhone !== payload.emailOrPhone));
+          }
+        } catch (e) {
+          console.warn('Failed to parse users SSE', e);
+        }
+      });
+
+      es.onerror = (err) => {
+        // will attempt to reconnect automatically
+      };
+    } catch (e) {
+      console.warn('SSE not available', e);
+    }
+
+    return () => {
+      if (es) {
+        es.close();
+      }
+    };
+  }, []);
+
   // Save users array whenever it changes
   useEffect(() => {
     try {

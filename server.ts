@@ -944,6 +944,17 @@ app.post('/api/users', async (req, res) => {
         avatar: avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       });
 
+      // broadcast
+      broadcastEvent('users', { action: 'upsert', user: {
+        id: newUser._id.toString(),
+        name: newUser.name,
+        emailOrPhone: newUser.emailOrPhone,
+        role: newUser.role,
+        shopName: newUser.shopName,
+        avatar: newUser.avatar,
+        createdAt: newUser.createdAt,
+      }});
+
       return res.json({
         success: true,
         message: 'ইউজার সফলভাবে তৈরি করা হয়েছে!',
@@ -977,6 +988,9 @@ app.post('/api/users', async (req, res) => {
       createdAt: new Date().toISOString(),
     };
     inMemoryUsers.push(newMemUser);
+
+    // broadcast
+    broadcastEvent('users', { action: 'upsert', user: newMemUser });
 
     return res.json({
       success: true,
@@ -1014,6 +1028,8 @@ app.delete('/api/users/:id', async (req, res) => {
       if (query.length > 0) {
         await UserModel.deleteMany({ $or: query });
       }
+      // broadcast
+      broadcastEvent('users', { action: 'delete', id, emailOrPhone });
       return res.json({ success: true, message: 'User deleted from MongoDB' });
     }
 
@@ -1021,6 +1037,8 @@ app.delete('/api/users/:id', async (req, res) => {
     if (index !== -1) {
       inMemoryUsers.splice(index, 1);
     }
+    // broadcast
+    broadcastEvent('users', { action: 'delete', id, emailOrPhone });
     return res.json({ success: true, message: 'User deleted' });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1053,6 +1071,8 @@ app.post('/api/products', async (req, res) => {
         productData,
         { upsert: true, new: true }
       );
+      // broadcast to SSE clients
+      broadcastEvent('products', { action: 'upsert', product: doc });
       return res.json({ success: true, product: doc });
     }
     // Update in-memory fallback
@@ -1062,6 +1082,8 @@ app.post('/api/products', async (req, res) => {
     } else {
       inMemoryProducts.unshift(productData);
     }
+    // broadcast to SSE clients
+    broadcastEvent('products', { action: 'upsert', product: productData });
     return res.json({ success: true, product: productData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1078,6 +1100,8 @@ app.delete('/api/products/:id', async (req, res) => {
     if (idx !== -1) {
       inMemoryProducts.splice(idx, 1);
     }
+    // broadcast deletion
+    broadcastEvent('products', { action: 'delete', id });
     return res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1110,6 +1134,8 @@ app.post('/api/customers', async (req, res) => {
         customerData,
         { upsert: true, new: true }
       );
+      // broadcast
+      broadcastEvent('customers', { action: 'upsert', customer: doc });
       return res.json({ success: true, customer: doc });
     }
     const idx = inMemoryCustomers.findIndex(c => c.id === customerData.id);
@@ -1118,6 +1144,8 @@ app.post('/api/customers', async (req, res) => {
     } else {
       inMemoryCustomers.unshift(customerData);
     }
+    // broadcast
+    broadcastEvent('customers', { action: 'upsert', customer: customerData });
     return res.json({ success: true, customer: customerData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1134,6 +1162,8 @@ app.delete('/api/customers/:id', async (req, res) => {
     if (idx !== -1) {
       inMemoryCustomers.splice(idx, 1);
     }
+    // broadcast deletion
+    broadcastEvent('customers', { action: 'delete', id });
     return res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1166,9 +1196,13 @@ app.post('/api/transactions', async (req, res) => {
         txnData,
         { upsert: true, new: true }
       );
+      // broadcast
+      broadcastEvent('transactions', { action: 'upsert', transaction: doc });
       return res.json({ success: true, transaction: doc });
     }
     inMemoryTransactions.unshift(txnData);
+    // broadcast
+    broadcastEvent('transactions', { action: 'upsert', transaction: txnData });
     return res.json({ success: true, transaction: txnData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1201,9 +1235,13 @@ app.post('/api/orders', async (req, res) => {
         orderData,
         { upsert: true, new: true }
       );
+      // broadcast
+      broadcastEvent('orders', { action: 'upsert', order: doc });
       return res.json({ success: true, order: doc });
     }
     inMemoryOrders.unshift(orderData);
+    // broadcast
+    broadcastEvent('orders', { action: 'upsert', order: orderData });
     return res.json({ success: true, order: orderData });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -1232,13 +1270,54 @@ app.post('/api/settings', async (req, res) => {
     const settingsData = req.body;
     if (isMongoConnected) {
       const doc = await SettingsModel.findOneAndUpdate({}, settingsData, { upsert: true, new: true });
+      // broadcast
+      broadcastEvent('settings', { action: 'upsert', settings: doc });
       return res.json({ success: true, settings: doc });
     }
     Object.assign(inMemorySettings, settingsData);
+    // broadcast
+    broadcastEvent('settings', { action: 'upsert', settings: inMemorySettings });
     return res.json({ success: true, settings: inMemorySettings });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// Simple Server-Sent Events (SSE) broadcaster for realtime updates
+// Clients (frontend) can connect to GET /events and will receive JSON payloads
+// whenever server-side resources are created/updated/deleted.
+
+const sseClients: Set<any> = new Set();
+
+function broadcastEvent(eventName: string, data: any) {
+  try {
+    const payload = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
+    for (const res of sseClients) {
+      try {
+        res.write(payload);
+      } catch (e) {
+        // ignore per-client errors; removal happens on close
+      }
+    }
+  } catch (e) {
+    console.warn('SSE broadcast failed', e);
+  }
+}
+
+app.get('/events', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  // send a comment + retry hint on connect
+  res.write(':ok\n');
+  res.write('retry: 10000\n\n');
+
+  sseClients.add(res);
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
 });
 
 // Vite Middleware for Development / Static Hosting for Production
