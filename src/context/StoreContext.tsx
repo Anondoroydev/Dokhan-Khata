@@ -139,6 +139,49 @@ const LOCAL_STORAGE_KEY = 'dokankhata_db_v1';
 const USERS_STORAGE_KEY = 'dokankhata_users_v1';
 const SESSION_STORAGE_KEY = 'dokankhata_user_session_v1';
 
+const getSavedSessionUser = (): User | null => {
+  try {
+    const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!savedSession) return null;
+
+    const parsedSession = JSON.parse(savedSession);
+    if (!parsedSession?.id) return null;
+
+    const savedUsersStr = localStorage.getItem(USERS_STORAGE_KEY);
+    let realUsers = initialUsers;
+    if (savedUsersStr) {
+      const parsedUsers = JSON.parse(savedUsersStr);
+      if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+        realUsers = parsedUsers.map((u: User) => u.role === 'admin' ? { ...u, emailOrPhone: '01826339098', password: u.password || 'admin' } : u);
+      }
+    }
+
+    const realUser = realUsers.find((u) => u.id === parsedSession.id);
+    if (realUser) {
+      return {
+        ...realUser,
+        ...parsedSession,
+        password: parsedSession.password ?? realUser.password,
+      };
+    }
+
+    const fallbackUser = realUsers.find(
+      (u) => u.emailOrPhone === parsedSession.emailOrPhone || u.name === parsedSession.name
+    );
+    if (fallbackUser) {
+      return {
+        ...fallbackUser,
+        ...parsedSession,
+        password: parsedSession.password ?? fallbackUser.password,
+      };
+    }
+  } catch (e) {
+    console.warn('Error reading saved session', e);
+  }
+
+  return null;
+};
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Localization
   const [language, setLanguageState] = useState<Language>(() => {
@@ -170,64 +213,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   // Current Logged-in User Session (defaults to null / customer storefront)
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    try {
-      const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (savedSession) {
-        const parsedSession = JSON.parse(savedSession);
-        
-        // SECURITY FIX: Verify session against real users to prevent role spoofing
-        const savedUsersStr = localStorage.getItem(USERS_STORAGE_KEY);
-        let realUsers = initialUsers;
-        if (savedUsersStr) {
-          const parsedUsers = JSON.parse(savedUsersStr);
-          if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
-            realUsers = parsedUsers.map((u: User) => u.role === 'admin' ? { ...u, emailOrPhone: '01826339098', password: u.password || 'admin' } : u);
-          }
-        }
-        
-        const realUser = realUsers.find(u => u.id === parsedSession.id && u.password === parsedSession.password);
-        if (realUser) {
-          return realUser;
-        }
-      }
-    } catch (e) {
-      console.warn('Error reading saved session', e);
-    }
-    return null;
-  });
+  const [currentUser, setCurrentUser] = useState<User | null>(() => getSavedSessionUser());
 
   // RBAC Current Role
   const [currentRole, setCurrentRoleState] = useState<UserRole>(() => {
-    try {
-      const savedSession = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (savedSession) {
-        const parsedSession = JSON.parse(savedSession);
-        
-        // SECURITY FIX: Same verification for role
-        const savedUsersStr = localStorage.getItem(USERS_STORAGE_KEY);
-        let realUsers = initialUsers;
-        if (savedUsersStr) {
-          const parsedUsers = JSON.parse(savedUsersStr);
-          if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
-            realUsers = parsedUsers;
-          }
+    const savedUser = getSavedSessionUser();
+    if (savedUser) {
+      const activeViewRole = localStorage.getItem('active_view_role');
+      if (activeViewRole === 'admin' || activeViewRole === 'staff' || activeViewRole === 'customer') {
+        if (savedUser.role === 'customer' && activeViewRole !== 'customer') {
+          return 'customer';
         }
-        
-        const realUser = realUsers.find(u => u.id === parsedSession.id && u.password === parsedSession.password);
-        if (realUser) {
-          const activeViewRole = localStorage.getItem('active_view_role');
-          if (activeViewRole === 'admin' || activeViewRole === 'staff' || activeViewRole === 'customer') {
-            // Only allow viewing as admin/staff if they are actually admin/staff
-            if (realUser.role === 'customer' && activeViewRole !== 'customer') {
-              return 'customer';
-            }
-            return activeViewRole as UserRole;
-          }
-          return realUser.role; // Use actual db role if no preference
-        }
+        return activeViewRole as UserRole;
       }
-    } catch (e) {}
+      return savedUser.role;
+    }
     return 'customer';
   });
 
@@ -1069,11 +1069,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
 
         const effectiveRole = role && data.user.role === 'admin' ? role : data.user.role;
+        const persistedSessionUser = {
+          ...sessionUser,
+          password: users.find((u) => u.id === sessionUser.id)?.password || data.user.password || '',
+        };
 
-        setCurrentUser(sessionUser);
+        setCurrentUser(persistedSessionUser);
         setCurrentRoleState(effectiveRole);
         try {
-          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(persistedSessionUser));
           localStorage.setItem('active_view_role', effectiveRole);
         } catch (e) {}
 
@@ -1123,10 +1127,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       const sessionUser: User = { ...foundUser };
-      setCurrentUser(sessionUser);
+      const persistedSessionUser = {
+        ...sessionUser,
+        password: foundUser.password || '',
+      };
+      setCurrentUser(persistedSessionUser);
       setCurrentRoleState(effectiveRole);
       try {
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(persistedSessionUser));
         localStorage.setItem('active_view_role', effectiveRole);
       } catch (e) {}
 
@@ -1147,12 +1155,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updatedUser.role = 'customer';
     }
 
+    const persistedUser = {
+      ...updatedUser,
+      password: updatedUser.password || currentUser.password || '',
+    };
+
     // Update in users array
-    setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    setUsers(prev => prev.map(u => u.id === persistedUser.id ? persistedUser : u));
     
     // Update current user
-    setCurrentUser(updatedUser);
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
+    setCurrentUser(persistedUser);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(persistedUser));
     
     logActivity('Profile Updated', 'প্রোফাইল আপডেট', `${currentUser.name} updated their profile`);
   };
@@ -1209,6 +1222,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newUser));
+      localStorage.setItem('active_view_role', newUser.role);
     } catch (e) {}
 
     const successNotif: AppNotification = {
