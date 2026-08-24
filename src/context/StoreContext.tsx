@@ -1112,6 +1112,102 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Chat Support
+  // Refund an order — reverse the paid amount back to customer khata
+  const refundOrder = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) return;
+
+    const orderTotal = (typeof order.totalAmount === 'number' && !isNaN(order.totalAmount))
+      ? order.totalAmount
+      : order.items.reduce((s, i) => s + (Number(i.total) || 0), 0);
+    const refundAmount = order.paidAmount ?? (order.paymentStatus === 'paid' ? orderTotal : 0);
+    if (refundAmount <= 0) {
+      toast.error(language === 'bn' ? 'এই অর্ডারে কোনো পরিশোধিত টাকা নেই রিফান্ড করার জন্য।' : 'No paid amount to refund for this order.');
+      return;
+    }
+
+    const customerRecord = customers.find(
+      (c) => c.id === order.customerId || c.phone === order.customerPhone
+    );
+
+    if (customerRecord) {
+      const refundNote = language === 'bn'
+        ? `অর্ডার ${order.orderNumber} বাতিল - রিফান্ড ৳${refundAmount}`
+        : `Order ${order.orderNumber} cancelled - Refund ৳${refundAmount}`;
+
+      const refundTxn: Transaction = {
+        id: `txn-refund-${Date.now()}`,
+        customerId: customerRecord.id,
+        customerName: customerRecord.name,
+        customerPhone: customerRecord.phone,
+        type: 'payment_received' as const,
+        amount: refundAmount,
+        note: refundNote,
+        paymentMethod: (order.paymentMethod === 'cod' ? 'cash' : order.paymentMethod) as any,
+        date: new Date().toISOString(),
+        receivedBy: 'Refund (Admin)',
+        invoiceNo: `REFUND-${Date.now().toString().slice(-6)}`,
+        transactionId: order.transactionId ? `REFUND-${order.transactionId}` : undefined,
+      };
+
+      setTransactions((prev) => [refundTxn, ...prev]);
+      try {
+        await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(refundTxn),
+        });
+      } catch (err) {
+        console.error('MongoDB refund txn sync error:', err);
+      }
+
+      const updatedCustomer = {
+        ...customerRecord,
+        totalPaid: Math.max(0, customerRecord.totalPaid - refundAmount),
+        lastTransactionDate: new Date().toISOString(),
+      };
+      setCustomers((prev) => prev.map((c) => (c.id === customerRecord.id ? updatedCustomer : c)));
+      try {
+        await fetch('/api/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedCustomer),
+        });
+      } catch (err) {
+        console.error('MongoDB refund customer sync error:', err);
+      }
+    }
+
+    setOrders((prev) => {
+      const updated = prev.map((o) =>
+        o.id === orderId
+          ? { ...o, paymentStatus: 'unpaid' as const, paidAmount: 0 }
+          : o
+      );
+      const target = updated.find((o) => o.id === orderId);
+      if (target) {
+        fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(target),
+        }).catch((err) => console.error('MongoDB refund order sync error:', err));
+      }
+      return updated;
+    });
+
+    addNotification({
+      title: `Refund Processed: ${order.orderNumber}`,
+      titleBn: `রিফান্ড সম্পন্ন: ${order.orderNumber}`,
+      message: `৳${refundAmount} refunded to ${order.customerName}.`,
+      messageBn: `৳${refundAmount} টাকা ${order.customerName}-কে ফেরত দেওয়া হয়েছে।`,
+      type: 'payment',
+    });
+
+    logActivity('Order Refund', 'অর্ডার রিফান্ড', `${order.orderNumber}: ৳${refundAmount} refunded to ${order.customerName}`);
+    toast.success(language === 'bn' ? `৳${refundAmount} টাকা সফলভাবে রিফান্ড করা হয়েছে!` : `৳${refundAmount} refunded successfully!`);
+  };
+
+
   const sendChatMessage = (text: string, orderReferenceId?: string) => {
     if (!text.trim()) return;
 
