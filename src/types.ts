@@ -115,6 +115,7 @@ export interface Transaction {
   paymentMethod: 'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due';
   receivedBy: string; // Staff/Admin name
   invoiceNo?: string;
+  transactionId?: string;
 }
 
 export type OrderStatus = 'pending' | 'confirmed' | 'packing' | 'out_for_delivery' | 'delivered' | 'cancelled';
@@ -142,7 +143,8 @@ export interface Order {
   discount: number;
   totalAmount: number;
   paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card';
-  paymentStatus: 'paid' | 'unpaid';
+  paymentStatus: 'paid' | 'partial' | 'unpaid';
+  paidAmount?: number;
   transactionId?: string;
   status: OrderStatus;
   orderDate: string;

@@ -841,6 +841,15 @@ app.post("/api/users", async (req, res) => {
         shopName: shopName || "\u09A6\u09CB\u0995\u09BE\u09A8\u0996\u09BE\u09A4\u09BE \u09B8\u09CD\u099F\u09CB\u09B0",
         avatar: avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
       });
+      broadcastEvent("users", { action: "upsert", user: {
+        id: newUser._id.toString(),
+        name: newUser.name,
+        emailOrPhone: newUser.emailOrPhone,
+        role: newUser.role,
+        shopName: newUser.shopName,
+        avatar: newUser.avatar,
+        createdAt: newUser.createdAt
+      } });
       return res.json({
         success: true,
         message: "\u0987\u0989\u099C\u09BE\u09B0 \u09B8\u09AB\u09B2\u09AD\u09BE\u09AC\u09C7 \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09BE \u09B9\u09DF\u09C7\u099B\u09C7!",
@@ -871,6 +880,7 @@ app.post("/api/users", async (req, res) => {
       createdAt: (/* @__PURE__ */ new Date()).toISOString()
     };
     inMemoryUsers.push(newMemUser);
+    broadcastEvent("users", { action: "upsert", user: newMemUser });
     return res.json({
       success: true,
       message: "\u0987\u0989\u099C\u09BE\u09B0 \u09B8\u09AB\u09B2\u09AD\u09BE\u09AC\u09C7 \u09A4\u09C8\u09B0\u09BF \u0995\u09B0\u09BE \u09B9\u09DF\u09C7\u099B\u09C7!",
@@ -903,12 +913,14 @@ app.delete("/api/users/:id", async (req, res) => {
       if (query.length > 0) {
         await UserModel.deleteMany({ $or: query });
       }
+      broadcastEvent("users", { action: "delete", id, emailOrPhone });
       return res.json({ success: true, message: "User deleted from MongoDB" });
     }
     const index = inMemoryUsers.findIndex((u) => u._id === id || u.id === id || emailOrPhone && u.emailOrPhone === emailOrPhone);
     if (index !== -1) {
       inMemoryUsers.splice(index, 1);
     }
+    broadcastEvent("users", { action: "delete", id, emailOrPhone });
     return res.json({ success: true, message: "User deleted" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -936,6 +948,7 @@ app.post("/api/products", async (req, res) => {
         productData,
         { upsert: true, new: true }
       );
+      broadcastEvent("products", { action: "upsert", product: doc });
       return res.json({ success: true, product: doc });
     }
     const idx = inMemoryProducts.findIndex((p) => p.id === productData.id);
@@ -944,6 +957,7 @@ app.post("/api/products", async (req, res) => {
     } else {
       inMemoryProducts.unshift(productData);
     }
+    broadcastEvent("products", { action: "upsert", product: productData });
     return res.json({ success: true, product: productData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -959,6 +973,7 @@ app.delete("/api/products/:id", async (req, res) => {
     if (idx !== -1) {
       inMemoryProducts.splice(idx, 1);
     }
+    broadcastEvent("products", { action: "delete", id });
     return res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -986,6 +1001,7 @@ app.post("/api/customers", async (req, res) => {
         customerData,
         { upsert: true, new: true }
       );
+      broadcastEvent("customers", { action: "upsert", customer: doc });
       return res.json({ success: true, customer: doc });
     }
     const idx = inMemoryCustomers.findIndex((c) => c.id === customerData.id);
@@ -994,6 +1010,7 @@ app.post("/api/customers", async (req, res) => {
     } else {
       inMemoryCustomers.unshift(customerData);
     }
+    broadcastEvent("customers", { action: "upsert", customer: customerData });
     return res.json({ success: true, customer: customerData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1009,6 +1026,7 @@ app.delete("/api/customers/:id", async (req, res) => {
     if (idx !== -1) {
       inMemoryCustomers.splice(idx, 1);
     }
+    broadcastEvent("customers", { action: "delete", id });
     return res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1036,9 +1054,11 @@ app.post("/api/transactions", async (req, res) => {
         txnData,
         { upsert: true, new: true }
       );
+      broadcastEvent("transactions", { action: "upsert", transaction: doc });
       return res.json({ success: true, transaction: doc });
     }
     inMemoryTransactions.unshift(txnData);
+    broadcastEvent("transactions", { action: "upsert", transaction: txnData });
     return res.json({ success: true, transaction: txnData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1066,9 +1086,11 @@ app.post("/api/orders", async (req, res) => {
         orderData,
         { upsert: true, new: true }
       );
+      broadcastEvent("orders", { action: "upsert", order: doc });
       return res.json({ success: true, order: doc });
     }
     inMemoryOrders.unshift(orderData);
+    broadcastEvent("orders", { action: "upsert", order: orderData });
     return res.json({ success: true, order: orderData });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1092,13 +1114,44 @@ app.post("/api/settings", async (req, res) => {
     const settingsData = req.body;
     if (isMongoConnected) {
       const doc = await SettingsModel.findOneAndUpdate({}, settingsData, { upsert: true, new: true });
+      broadcastEvent("settings", { action: "upsert", settings: doc });
       return res.json({ success: true, settings: doc });
     }
     Object.assign(inMemorySettings, settingsData);
+    broadcastEvent("settings", { action: "upsert", settings: inMemorySettings });
     return res.json({ success: true, settings: inMemorySettings });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+var sseClients = /* @__PURE__ */ new Set();
+function broadcastEvent(eventName, data) {
+  try {
+    const payload = `event: ${eventName}
+data: ${JSON.stringify(data)}
+
+`;
+    for (const res of sseClients) {
+      try {
+        res.write(payload);
+      } catch (e) {
+      }
+    }
+  } catch (e) {
+    console.warn("SSE broadcast failed", e);
+  }
+}
+app.get("/events", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders?.();
+  res.write(":ok\n");
+  res.write("retry: 10000\n\n");
+  sseClients.add(res);
+  req.on("close", () => {
+    sseClients.delete(res);
+  });
 });
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

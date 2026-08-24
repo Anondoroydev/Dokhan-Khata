@@ -88,14 +88,14 @@ export const KhataView: React.FC<KhataViewProps> = ({ onOpenReceipt, onOpenAddCu
     setTxnModalOpen(true);
   };
 
-  const handleSaveTransaction = (e: React.FormEvent) => {
+  const handleSaveTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!txnTargetCustomer || !txnAmount) return;
 
     const amountNum = parseFloat(txnAmount);
     if (isNaN(amountNum) || amountNum <= 0) return;
 
-    const newTxn = addKhataTransaction(
+    const newTxn = await addKhataTransaction(
       txnTargetCustomer.id,
       txnType,
       amountNum,

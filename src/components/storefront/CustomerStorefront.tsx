@@ -49,6 +49,8 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     placeOnlineOrder,
     orders,
     customers,
+    transactions,
+    addKhataTransaction,
     settings,
     language,
     t,
@@ -74,6 +76,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
   const [customerAddress, setCustomerAddress] = useState('House 14, Road 2, Dhanmondi, Dhaka');
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card'>('bkash');
+  const [paidNow, setPaidNow] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (currentUser) {
@@ -84,6 +87,11 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
 
   // Digital Gateway Modal
   const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+
+  // Baki Payment State
+  const [isBakiGatewayOpen, setIsBakiGatewayOpen] = useState(false);
+  const [bakiPayAmount, setBakiPayAmount] = useState<number | ''>('');
+  const [bakiPayMethod, setBakiPayMethod] = useState<'bkash' | 'nagad' | 'rocket' | 'upay' | 'card'>('bkash');
 
   // Cart Calculations
   const cartSubtotal = cart.reduce((sum, item) => sum + item.product.sellPrice * item.quantity, 0);
@@ -116,7 +124,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     { id: 'household', label: isBn ? 'গৃহস্থালি' : 'Household' },
   ];
 
-  const handleInitiateOrder = () => {
+  const handleInitiateOrder = async () => {
     if (cart.length === 0) return;
     if (!customerName || !customerPhone || !customerAddress) {
       toast.error(isBn ? 'অনুগ্রহ করে নাম, ফোন এবং সম্পূর্ণ ঠিকানা প্রদান করুন!' : 'Please provide name, phone and address!');
@@ -124,13 +132,15 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     }
 
     if (paymentMethod === 'cod') {
-      const newOrder = placeOnlineOrder({
+      const paying = typeof paidNow === 'number' ? paidNow : 0;
+      const newOrder = await placeOnlineOrder({
         customerName,
         customerPhone,
         customerAddress,
         deliveryNotes,
         paymentMethod: 'cod',
-        isPaid: false,
+        isPaid: paying >= netTotal,
+        receivedAmount: paying,
       });
       setIsCheckoutOpen(false);
       setIsCartOpen(false);
@@ -142,9 +152,9 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     }
   };
 
-  const handleGatewaySuccess = (trxId: string) => {
+  const handleGatewaySuccess = async (trxId: string) => {
     setIsGatewayOpen(false);
-    const newOrder = placeOnlineOrder({
+    const newOrder = await placeOnlineOrder({
       customerName,
       customerPhone,
       customerAddress,
@@ -152,11 +162,47 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       paymentMethod,
       transactionId: trxId,
       isPaid: true,
+      receivedAmount: netTotal,
     });
     setIsCheckoutOpen(false);
     setIsCartOpen(false);
     onOpenReceipt(newOrder);
     setActiveTab('orders');
+  };
+
+  // Baki Handlers
+  const handleBakiPaymentInitiate = () => {
+    if (!bakiPayAmount || bakiPayAmount <= 0) {
+      toast.error(isBn ? 'অনুগ্রহ করে সঠিক পরিমাণ লিখুন' : 'Please enter a valid amount');
+      return;
+    }
+    const activeCustomerRecord = customers.find((c) => c.phone === customerPhone);
+    if (activeCustomerRecord && bakiPayAmount > activeCustomerRecord.totalDue) {
+       toast.error(isBn ? 'বকেয়ার চেয়ে বেশি পরিমাণ পরিশোধ করা যাবে না' : 'Cannot pay more than the total due');
+       return;
+    }
+    setIsBakiGatewayOpen(true);
+  };
+
+  const handleBakiGatewaySuccess = async (trxId: string) => {
+    setIsBakiGatewayOpen(false);
+    const activeCustomerRecord = customers.find((c) => c.phone === customerPhone);
+    if (!activeCustomerRecord || !bakiPayAmount) return;
+    
+    try {
+      await addKhataTransaction(
+        activeCustomerRecord.id,
+        'payment_received',
+        Number(bakiPayAmount),
+        `Digital payment by customer (Trx: ${trxId})`,
+        bakiPayMethod,
+        trxId
+      );
+      toast.success(isBn ? 'আপনার বকেয়া সফলভাবে পরিশোধ করা হয়েছে!' : 'Your due payment was successful!');
+      setBakiPayAmount('');
+    } catch (e) {
+      toast.error(isBn ? 'পেমেন্ট ব্যর্থ হয়েছে। আবার চেষ্টা করুন।' : 'Payment failed. Try again.');
+    }
   };
 
   // Find customer for My Baki tab
@@ -307,6 +353,31 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
           </div>
 
           {/* Product Grid */}
+
+          {/* Low-stock highlights for customers (auto-updates via SSE) */}
+          <div className="mb-3">
+            <h4 className="text-xs font-bold text-amber-300 mb-2 flex items-center justify-between">
+              <span>{isBn ? 'সীমিত স্টক পণ্যসমূহ' : 'Low-stock Products'}</span>
+              <span className="text-[11px] text-slate-400">{isBn ? 'লাইভ আপডেট' : 'Live'}</span>
+            </h4>
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              {products
+                .filter((p) => p.isOnlineAvailable !== false && p.stock <= (p.minStockAlert ?? 5))
+                .slice(0, 8)
+                .map((p) => (
+                  <div key={p.id} className="min-w-[140px] bg-slate-900/60 p-2 rounded-xl border border-white/10 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <img src={p.image} alt={p.name} className="w-12 h-12 rounded-lg object-cover bg-slate-950" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-white truncate">{isBn ? p.nameBn || p.name : p.name}</div>
+                        <div className="text-[11px] text-slate-400">{isBn ? `স্টক: ${p.stock}` : `Stock: ${p.stock}`}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-4">
             {onlineProducts.map((prod) => {
               const inCart = cart.find((i) => i.product.id === prod.id);
@@ -644,43 +715,182 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
             </div>
           ) : (
             <>
-              <div>
-                <h3 className="font-bold text-base text-white">{isBn ? 'আপনার বাকীর হিসাব খাতা' : 'Your Baki Khata Account'}</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {isBn ? 'দোকানে আপনার বর্তমান বকেয়া ও জমার খতিয়ান' : 'Check your store credit balance and payment history'}
-                </p>
-              </div>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="w-6 h-6 text-emerald-400" />
+                    <h3 className="font-black text-xl text-white tracking-tight">{isBn ? 'আপনার বাকীর হিসাব খাতা' : 'Your Baki Khata Account'}</h3>
+                  </div>
+                  <p className="text-sm text-slate-400">
+                    {isBn ? 'দোকানে আপনার বর্তমান বকেয়া ও জমার খতিয়ান' : 'Check your store credit balance and payment history'}
+                  </p>
+                </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="01XXXXXXXXX"
-                  className="px-3 py-2 text-xs font-mono border border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white w-64"
-                />
+                <div className="relative max-w-xs w-full">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+                  <input
+                    type="text"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder={isBn ? 'আপনার ফোন নাম্বার...' : 'Your Phone Number...'}
+                    className="w-full pl-9 pr-4 py-2.5 text-sm font-mono font-medium border border-white/10 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 bg-white/[0.03] text-white transition-all placeholder:text-slate-500"
+                  />
+                </div>
               </div>
 
               {activeCustomerRecord ? (
-                <div className="space-y-4 pt-2">
+                <div className="space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl">
-                      <span className="text-xs font-bold text-rose-400 block">{t.khata.currentDue}</span>
-                      <span className="text-2xl font-black font-mono text-rose-400">৳{activeCustomerRecord.totalDue}</span>
+                    <div className="relative overflow-hidden p-5 bg-gradient-to-br from-rose-500/20 to-rose-900/40 border border-rose-500/30 rounded-3xl group hover:border-rose-500/50 transition-all">
+                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/20 rounded-full blur-2xl group-hover:bg-rose-500/30 transition-all" />
+                      <div className="flex items-start justify-between relative z-10">
+                        <div>
+                          <span className="text-sm font-bold text-rose-300/80 mb-1 block uppercase tracking-wider">{t.khata.currentDue}</span>
+                          <span className="text-4xl font-black font-mono text-rose-400 drop-shadow-md">৳{activeCustomerRecord.totalDue}</span>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
+                          <Clock className="w-6 h-6 text-rose-400" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                      <span className="text-xs font-bold text-emerald-400 block">{t.khata.totalPaid}</span>
-                      <span className="text-2xl font-black font-mono text-emerald-400">৳{activeCustomerRecord.totalPaid}</span>
+
+                    <div className="relative overflow-hidden p-5 bg-gradient-to-br from-emerald-500/20 to-teal-900/40 border border-emerald-500/30 rounded-3xl group hover:border-emerald-500/50 transition-all">
+                      <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/30 transition-all" />
+                      <div className="flex items-start justify-between relative z-10">
+                        <div>
+                          <span className="text-sm font-bold text-emerald-300/80 mb-1 block uppercase tracking-wider">{t.khata.totalPaid}</span>
+                          <span className="text-4xl font-black font-mono text-emerald-400 drop-shadow-md">৳{activeCustomerRecord.totalPaid}</span>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                          <Banknote className="w-6 h-6 text-emerald-400" />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400">
-                    {isBn
-                      ? 'বকেয়া পরিশোধ করতে চাইলে বিকাশে পেমেন্ট করে দোকানদারকে সরাসরি চ্যাটে মেসেজ দিন।'
-                      : 'To clear your dues, you can pay via bKash/Nagad and notify the owner in Live Chat.'}
-                  </p>
+
+                  {activeCustomerRecord.totalDue > 0 ? (
+                    <div className="bg-slate-900/80 p-5 rounded-3xl border border-white/10 shadow-xl shadow-black/20 space-y-4">
+                      <div>
+                        <h4 className="font-bold text-white text-sm flex items-center gap-2 mb-1">
+                          <CreditCard className="w-4 h-4 text-emerald-400" />
+                          {isBn ? 'অনলাইনে বকেয়া পরিশোধ করুন' : 'Pay Due Online'}
+                        </h4>
+                        <p className="text-xs text-slate-400">{isBn ? 'যেকোনো মাধ্যমে আপনার বকেয়া সরাসরি পরিশোধ করুন।' : 'Pay your due securely via our digital payment methods.'}</p>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                          <span className="absolute left-4 top-3 text-slate-400 font-mono font-bold">৳</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={activeCustomerRecord.totalDue}
+                            value={bakiPayAmount}
+                            onChange={(e) => setBakiPayAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                            placeholder={isBn ? `সর্বোচ্চ ৳${activeCustomerRecord.totalDue}` : `Max ৳${activeCustomerRecord.totalDue}`}
+                            className="w-full pl-8 pr-4 py-3 text-sm font-bold font-mono border border-white/10 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 bg-white/[0.03] text-white transition-all"
+                          />
+                        </div>
+                        <div className="relative flex-1">
+                          <select
+                            value={bakiPayMethod}
+                            onChange={(e) => setBakiPayMethod(e.target.value as any)}
+                            className="w-full px-4 py-3 text-sm font-bold border border-white/10 rounded-2xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 bg-slate-800 text-white transition-all appearance-none"
+                          >
+                            <option value="bkash">bKash / বিকাশ</option>
+                            <option value="nagad">Nagad / নগদ</option>
+                            <option value="rocket">Rocket / রকেট</option>
+                            <option value="upay">Upay / উপায়</option>
+                            <option value="card">Card / কার্ড</option>
+                          </select>
+                        </div>
+                        <button
+                          onClick={handleBakiPaymentInitiate}
+                          className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-2xl transition-all shadow-lg shadow-emerald-950/40 border border-emerald-400/30 flex items-center justify-center gap-2 sm:w-auto w-full whitespace-nowrap"
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>{isBn ? 'পরিশোধ করুন' : 'Pay Now'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-300">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed font-medium">
+                        {isBn
+                          ? 'অভিনন্দন! দোকানে আপনার কোনো বকেয়া নেই।'
+                          : 'Congratulations! You have no due in the store.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Transaction list for this customer */}
+                  <div className="bg-slate-900/80 border border-white/10 rounded-3xl overflow-hidden shadow-xl shadow-black/20">
+                    <div className="px-5 py-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                      <h4 className="font-bold text-white flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-emerald-400" />
+                        {isBn ? 'ট্রানজেকশন হিস্ট্রি' : 'Transaction History'}
+                      </h4>
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-white/10 text-slate-300 font-medium">
+                        {transactions?.filter((tx) => (tx.customerId === activeCustomerRecord.id || tx.customerPhone === activeCustomerRecord.phone)).length || 0} {isBn ? 'টি' : 'Records'}
+                      </span>
+                    </div>
+                    
+                    <div className="max-h-80 overflow-y-auto divide-y divide-white/5 p-2 custom-scrollbar">
+                      {transactions && transactions.filter((tx) => (tx.customerId === activeCustomerRecord.id || tx.customerPhone === activeCustomerRecord.phone)).length > 0 ? (
+                        transactions
+                          .filter((tx) => (tx.customerId === activeCustomerRecord.id || tx.customerPhone === activeCustomerRecord.phone))
+                          .map((tx) => (
+                            <div key={tx.id} className="p-3 mx-2 my-1 rounded-2xl hover:bg-white/[0.03] transition-colors flex items-center justify-between gap-4 group">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${
+                                  tx.type === 'payment_received' 
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                                    : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                }`}>
+                                  {tx.type === 'payment_received' ? <CheckCircle2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-white text-sm flex items-center gap-2">
+                                    {tx.type === 'payment_received' ? (isBn ? 'জমা দিয়েছেন' : 'Payment Received') : tx.type === 'due_sale' ? (isBn ? 'নতুন বাকী' : 'New Due Added') : tx.type}
+                                    {tx.paymentMethod && (
+                                      <span className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] uppercase tracking-wider text-slate-300 font-medium">
+                                        {tx.paymentMethod}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-slate-400 text-xs mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                    <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {new Date(tx.date).toLocaleString()}</span>
+                                    {tx.transactionId && <span className="text-slate-500 font-mono flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> TRX: {tx.transactionId}</span>}
+                                  </div>
+                                  {tx.note && <div className="text-slate-500 text-[11px] italic mt-1 line-clamp-1">{tx.note}</div>}
+                                </div>
+                              </div>
+                              <div className={`text-lg font-black font-mono shrink-0 ${tx.type === 'payment_received' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {tx.type === 'payment_received' ? '+' : ''}৳{tx.amount}
+                              </div>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="py-12 px-6 flex flex-col items-center justify-center text-center">
+                          <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 border border-white/5 shadow-inner">
+                            <BookOpen className="w-8 h-8 text-slate-500" />
+                          </div>
+                          <p className="text-sm font-bold text-slate-300">{isBn ? 'এখনও কোনো লেনদেন পাওয়া যায়নি' : 'No transactions found'}</p>
+                          <p className="text-xs text-slate-500 mt-1">{isBn ? 'আপনার লেনদেনের বিস্তারিত এখানে দেখা যাবে' : 'Your transaction details will appear here'}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <p className="text-xs text-slate-500">{isBn ? 'এই নাম্বারে কোনো বাকী খাতা পাওয়া যায়নি।' : 'No khata record found for this number.'}</p>
+                <div className="py-16 flex flex-col items-center justify-center text-center animate-in fade-in duration-500">
+                   <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-5 border border-white/5 shadow-inner">
+                     <Search className="w-10 h-10 text-slate-500" />
+                   </div>
+                   <p className="text-base font-bold text-slate-300">{isBn ? 'খাতা খুঁজে পাওয়া যায়নি' : 'Khata Not Found'}</p>
+                   <p className="text-sm text-slate-500 mt-2 max-w-sm">{isBn ? 'উপরে আপনার সঠিক ফোন নাম্বার দিন অথবা দোকানদারের সাথে যোগাযোগ করুন।' : 'Please enter your correct phone number above or contact the shop owner.'}</p>
+                </div>
               )}
             </>
           )}
@@ -949,6 +1159,20 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                   </div>
                 </div>
               </div>
+
+              {paymentMethod === 'cod' && (
+                <div className="mt-3">
+                  <label className="block font-bold text-slate-300 mb-1">{isBn ? 'এখনই জমা' : 'Amount paying now'}</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={paidNow ?? ''}
+                    onChange={(e) => setPaidNow(e.target.value === '' ? undefined : Number(e.target.value))}
+                    placeholder={`৳${netTotal}`}
+                    className="w-full px-3 py-2 border border-white/10 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
@@ -977,6 +1201,17 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
         language={language}
         settings={settings}
         onSuccess={handleGatewaySuccess}
+      />
+
+      {/* Baki Payment Gateway Modal */}
+      <PaymentGatewayModal
+        isOpen={isBakiGatewayOpen}
+        onClose={() => setIsBakiGatewayOpen(false)}
+        amount={Number(bakiPayAmount) || 0}
+        paymentMethod={bakiPayMethod}
+        language={language}
+        settings={settings}
+        onSuccess={handleBakiGatewaySuccess}
       />
 
       {/* Footer */}

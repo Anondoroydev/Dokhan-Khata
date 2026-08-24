@@ -28,6 +28,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import { CalculatorModal } from './CalculatorModal';
 import { UserRole } from '../../types';
 
 interface AdminHeaderProps {
@@ -69,6 +70,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     settings,
     mongoStatus,
   } = useStore();
+
+  const [isCalcOpen, setIsCalcOpen] = useState(false);
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -202,14 +205,25 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>{isOnline ? (isBn ? 'লাইভ ক্লাউড' : 'Live Sync') : (isBn ? 'অফলাইন' : 'Offline')}</span>
                   </span>
-                  <button 
-                    onClick={onOpenSettings}
-                    className="hidden xl:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 text-[10px] font-bold border border-teal-500/20 transition-colors cursor-pointer"
-                    title={isBn ? 'MongoDB ডাটাবেস সেটআপ' : 'Configure MongoDB Database'}
-                  >
-                    <Database className="w-2.5 h-2.5 text-teal-400" />
-                    <span>{mongoStatus.isConnected ? 'MongoDB Active' : 'MongoDB Config'}</span>
-                  </button>
+                  <div className="hidden xl:flex items-center gap-2">
+                    <button 
+                      onClick={() => setIsCalcOpen(true)}
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-white text-[12px] font-bold border border-white/10 transition-colors cursor-pointer"
+                      title={isBn ? 'ক্যালকুলেটর' : 'Calculator'}
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-300" />
+                      <span>Calc</span>
+                    </button>
+
+                    <button 
+                      onClick={onOpenSettings}
+                      className="hidden xl:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 text-[10px] font-bold border border-teal-500/20 transition-colors cursor-pointer"
+                      title={isBn ? 'MongoDB ডাটাবেস সেটআপ' : 'Configure MongoDB Database'}
+                    >
+                      <Database className="w-2.5 h-2.5 text-teal-400" />
+                      <span>{mongoStatus.isConnected ? 'MongoDB Active' : 'MongoDB Config'}</span>
+                    </button>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-400 truncate hidden xl:block">
                   {currentTab.subtitle}
@@ -732,6 +746,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
         </div>
       )}
+      <CalculatorModal isOpen={isCalcOpen} onClose={() => setIsCalcOpen(false)} />
     </header>
   );
 };

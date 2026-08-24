@@ -66,7 +66,7 @@ interface StoreContextType {
   restockProduct: (id: string, addedQty: number) => void;
   
   // Customer Khata & Baki actions
-  addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'totalDue' | 'totalPaid'>) => Customer;
+  addCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'totalDue' | 'totalPaid'>) => Promise<Customer>;
   updateCustomer: (id: string, updates: Partial<Customer>) => void;
   deleteCustomer: (id: string) => void;
   clearAllCustomers: () => void;
@@ -75,8 +75,9 @@ interface StoreContextType {
     type: 'due_sale' | 'payment_received', 
     amount: number, 
     note: string, 
-    paymentMethod?: 'cash' | 'bkash' | 'nagad' | 'due'
-  ) => Transaction;
+    paymentMethod?: 'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due',
+    transactionId?: string
+  ) => Promise<Transaction>;
   
   // POS & Sales actions
   processPOSSale: (saleData: {
@@ -104,7 +105,8 @@ interface StoreContextType {
     paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card';
     transactionId?: string;
     isPaid: boolean;
-  }) => Order;
+    receivedAmount?: number;
+  }) => Promise<Order>;
   
   // Orders Pipeline
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
@@ -666,7 +668,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Customer Management
-  const addCustomer = (custData: Omit<Customer, 'id' | 'createdAt' | 'totalDue' | 'totalPaid'>): Customer => {
+  const addCustomer = async (custData: Omit<Customer, 'id' | 'createdAt' | 'totalDue' | 'totalPaid'>): Promise<Customer> => {
     const newCustomer: Customer = {
       ...custData,
       id: `cust-${Date.now()}`,
@@ -675,11 +677,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString(),
     };
     setCustomers((prev) => [newCustomer, ...prev]);
-    fetch('/api/customers', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newCustomer),
-    }).catch((err) => console.error('MongoDB customer sync error:', err));
+    try {
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCustomer),
+      });
+    } catch (err) {
+      console.error('MongoDB customer sync error:', err);
+    }
 
     logActivity('Add Customer', 'নতুন গ্রাহক খাতা খোলা', `${custData.name} এর খাতা খোলা হয়েছে`);
     toast.success(language === 'bn' ? 'নতুন গ্রাহক যোগ করা হয়েছে!' : 'Customer added successfully!');
@@ -717,13 +723,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Baki Khata Transaction (Give Credit or Receive Payment)
-  const addKhataTransaction = (
+  const addKhataTransaction = async (
     customerId: string,
     type: 'due_sale' | 'payment_received',
     amount: number,
     note: string,
-    paymentMethod: 'cash' | 'bkash' | 'nagad' | 'due' = 'cash'
-  ): Transaction => {
+    paymentMethod: 'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due' = 'cash',
+    transactionId?: string
+  ): Promise<Transaction> => {
     const customer = customers.find((c) => c.id === customerId);
     const customerName = customer ? customer.name : 'Unknown Customer';
     const customerPhone = customer ? customer.phone : '';
@@ -740,33 +747,52 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       date: new Date().toISOString(),
       receivedBy: currentRole === 'admin' ? 'Shop Owner' : 'Staff Cashier',
       invoiceNo: `${type === 'due_sale' ? 'BAKI' : 'PAID'}-${Date.now().toString().slice(-6)}`,
+      transactionId: transactionId,
     };
 
     setTransactions((prev) => [newTxn, ...prev]);
-    fetch('/api/transactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newTxn),
-    }).catch((err) => console.error('MongoDB khata txn sync error:', err));
+    try {
+      await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTxn),
+      });
+    } catch (err) {
+      console.error('MongoDB khata txn sync error:', err);
+    }
 
-    // Update customer due & paid balance
-    setCustomers((prev) =>
-      prev.map((c) => {
-        if (c.id === customerId) {
-          const currentDue = c.totalDue;
-          const currentPaid = c.totalPaid;
-          const newDue = type === 'due_sale' ? currentDue + amount : Math.max(0, currentDue - amount);
-          const newPaid = type === 'payment_received' ? currentPaid + amount : currentPaid;
-          return {
-            ...c,
-            totalDue: newDue,
-            totalPaid: newPaid,
-            lastTransactionDate: new Date().toISOString(),
-          };
-        }
-        return c;
-      })
-    );
+    // Update customer due & paid balance and sync the updated customer object to backend so SSE notifies other clients
+    // Compute updated customer payload explicitly to avoid race with setCustomers
+    const existingCust = customers.find((c) => c.id === customerId);
+    let updatedCustomer: Customer | null = null;
+    if (existingCust) {
+      const newDue = type === 'due_sale' ? existingCust.totalDue + amount : Math.max(0, existingCust.totalDue - amount);
+      const newPaid = type === 'payment_received' ? existingCust.totalPaid + amount : existingCust.totalPaid;
+      updatedCustomer = {
+        ...existingCust,
+        totalDue: newDue,
+        totalPaid: newPaid,
+        lastTransactionDate: new Date().toISOString(),
+      };
+
+      // Update local state immediately
+      setCustomers((prev) => prev.map((c) => (c.id === customerId ? updatedCustomer as Customer : c)));
+
+      // Sync updated customer to backend and await so server broadcasts via SSE
+      try {
+        await fetch('/api/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedCustomer),
+        });
+      } catch (err) {
+        console.error('MongoDB customer sync error (khata):', err);
+      }
+    } else {
+      // If customer not found locally, do NOT POST a minimal partial object (that can overwrite server data).
+      // Instead, log a warning and skip customer sync here. If needed, caller should ensure a customer record exists (addCustomer).
+      console.warn('addKhataTransaction: customer not found locally, skipping customer sync to avoid overwriting server record', customerId);
+    }
 
     logActivity(
       type === 'due_sale' ? 'Baki Given' : 'Payment Received',
@@ -831,6 +857,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       total: item.product.sellPrice * item.quantity,
     }));
 
+    const received = saleData.receivedAmount ?? 0;
+    const total = saleData.totalAmount;
+    const remaining = Math.max(0, total - received);
     const isDue = saleData.paymentMethod === 'due';
 
     const newTxn: Transaction = {
@@ -839,9 +868,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       customerName,
       customerPhone,
       type: isDue ? 'due_sale' : 'cash_sale',
-      amount: saleData.totalAmount,
+      amount: total,
       discount: saleData.discount,
-      note: saleData.note || (isDue ? 'POS বাকী বিক্রি' : 'POS কাউন্টার নগদ বিক্রি'),
+      note: saleData.note || (isDue ? 'POS বাকী বিক্রি' : (received > 0 && remaining > 0 ? 'POS আংশিক বিক্রি' : 'POS কাউন্টার নগদ বিক্রি')),
       date: new Date().toISOString(),
       items: transactionItems,
       paymentMethod: saleData.paymentMethod,
@@ -856,20 +885,32 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       body: JSON.stringify(newTxn),
     }).catch((err) => console.error('MongoDB pos txn sync error:', err));
 
-    // If due sale and customer selected, update customer's due
-    if (isDue && saleData.customerId) {
-      setCustomers((prev) =>
-        prev.map((c) => {
-          if (c.id === saleData.customerId) {
-            return {
-              ...c,
-              totalDue: c.totalDue + saleData.totalAmount,
-              lastTransactionDate: new Date().toISOString(),
-            };
+    // Handle payments and dues for selected customers
+    if (saleData.customerId) {
+      if (remaining > 0) {
+        // It's a due sale (either partial or full)
+        (async () => {
+          try {
+            if (received > 0) {
+              await addKhataTransaction(saleData.customerId as string, 'payment_received', received, `POS ${receiptId} (paid)` , saleData.paymentMethod as any, receiptId);
+            }
+            await addKhataTransaction(saleData.customerId as string, 'due_sale', remaining, `POS ${receiptId} (due)`, 'due', receiptId);
+          } catch (err) {
+            console.error('Error recording POS khata transactions:', err);
           }
-          return c;
-        })
-      );
+        })();
+      } else if (received >= total) {
+        // Fully paid
+        (async () => {
+          try {
+            await addKhataTransaction(saleData.customerId as string, 'payment_received', total, `POS ${receiptId} (paid)`, saleData.paymentMethod as any, receiptId);
+          } catch (err) {
+            console.error('Error recording POS full payment to khata:', err);
+          }
+        })();
+      }
+    } else if (remaining > 0) {
+      console.warn('Partial/full due but no customerId provided; remaining due not recorded.');
     }
 
     logActivity('POS Sale', 'পিওএস বিক্রি সম্পন্ন', `বিল: ${receiptId}, মোট: ৳${saleData.totalAmount} (${saleData.paymentMethod})`);
@@ -917,7 +958,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Online Store Order placement
-  const placeOnlineOrder = (orderData: {
+  const placeOnlineOrder = async (orderData: {
     customerName: string;
     customerPhone: string;
     customerAddress: string;
@@ -925,7 +966,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card';
     transactionId?: string;
     isPaid: boolean;
-  }): Order => {
+    receivedAmount?: number;
+  }): Promise<Order> => {
     const subtotal = cart.reduce((sum, item) => sum + item.product.sellPrice * item.quantity, 0);
     const deliveryFee = settings.deliveryFee;
     const discount = subtotal >= 1000 ? 50 : 0;
@@ -943,6 +985,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       image: item.product.image,
     }));
 
+    // compute payments
+    const paidAmount = orderData.receivedAmount ?? (orderData.isPaid ? totalAmount : 0);
+    const remaining = Math.max(0, totalAmount - paidAmount);
+    const paymentStatus: 'paid' | 'partial' | 'unpaid' = paidAmount >= totalAmount ? 'paid' : (paidAmount > 0 ? 'partial' : 'unpaid');
+
     const newOrder: Order = {
       id: `ord-${Date.now()}`,
       orderNumber,
@@ -956,11 +1003,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       discount,
       totalAmount,
       paymentMethod: orderData.paymentMethod,
-      paymentStatus: orderData.isPaid ? 'paid' : 'unpaid',
+      paymentStatus,
       transactionId: orderData.transactionId,
       status: 'pending',
       orderDate: new Date().toISOString(),
       deliveryNotes: orderData.deliveryNotes,
+      // store how much was paid at order time
+      paidAmount,
     };
 
     // Decrement stock
@@ -975,11 +1024,39 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setOrders((prev) => [newOrder, ...prev]);
-    fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newOrder),
-    }).catch((err) => console.error('MongoDB order sync error:', err));
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOrder),
+      });
+    } catch (err) {
+      console.error('MongoDB order sync error:', err);
+    }
+
+    // Ensure there's a customer record for this phone so customer can see khata and order history
+    let customerRecord = customers.find((c) => c.phone === orderData.customerPhone || c.id === newOrder.customerId);
+    if (!customerRecord) {
+      try {
+        customerRecord = await addCustomer({ name: orderData.customerName, phone: orderData.customerPhone, address: orderData.customerAddress });
+      } catch (e) {
+        console.warn('Failed to auto-create customer for online order', e);
+      }
+    }
+
+    // Record payment and baki (due) if any. Await so backend syncs (SSE broadcast) happen before we navigate away
+    if (customerRecord) {
+      if (paidAmount > 0) {
+        const txnPaymentMethod = orderData.paymentMethod === 'cod' ? 'cash' : (orderData.paymentMethod as any);
+        const paidNote = `Online order ${orderNumber} (paid via ${txnPaymentMethod}${orderData.transactionId ? ` trx:${orderData.transactionId}` : ''})`;
+        await addKhataTransaction(customerRecord.id, 'payment_received', paidAmount, paidNote, txnPaymentMethod, orderData.transactionId);
+      }
+      if (remaining > 0) {
+        const dueNote = `Online order ${orderNumber} (due)`;
+        await addKhataTransaction(customerRecord.id, 'due_sale', remaining, dueNote, 'due', undefined);
+      }
+    }
+
     clearCart();
 
     addNotification({

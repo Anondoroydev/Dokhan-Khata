@@ -69,15 +69,24 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
   const changeAmount = paymentMethod === 'cash' ? Math.max(0, receivedNum - netPayable) : 0;
 
   const handleAddToCart = (product: Product) => {
-    if (product.stock <= 0) return;
+    console.debug('POS: add to cart clicked', product.id, product.name, 'stock=', product.stock);
+    if (product.stock <= 0) {
+      toast.error(language === 'bn' ? 'পণ্য স্টকে নেই' : 'Product out of stock');
+      return;
+    }
+
     setPosCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
-        if (existing.quantity >= product.stock) return prev;
+        if (existing.quantity >= product.stock) {
+          toast.error(language === 'bn' ? 'স্টকের চেয়ে বেশি যোগ করা সম্ভব নয়' : 'Cannot add more than available stock');
+          return prev;
+        }
         return prev.map((item) =>
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
+      toast.success(language === 'bn' ? 'কার্টে যোগ করা হয়েছে' : 'Added to cart');
       return [...prev, { product, quantity: 1 }];
     });
   };
@@ -113,8 +122,10 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
 
   const handleCompleteSale = () => {
     if (posCart.length === 0) return;
-    if (paymentMethod === 'due' && !selectedCustomerId) {
-      toast.error(isBn ? 'অনুগ্রহ করে বাকী বিক্রির জন্য একজন কাস্টমার নির্বাচন করুন!' : 'Please select a customer for credit (baki) sale!');
+    const remaining = Math.max(0, netPayable - receivedNum);
+    // If there is any remaining amount (due) or explicit due method, a customer must be selected
+    if ((paymentMethod === 'due' || remaining > 0) && !selectedCustomerId) {
+      toast.error(isBn ? 'বাকী বা আংশিক পেমেন্টের জন্য অনুগ্রহ করে একটি গ্রাহক নির্বাচন করুন!' : 'Please select a customer to record the due amount!');
       return;
     }
 
@@ -191,7 +202,7 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
             return (
               <div
                 key={prod.id}
-                onClick={() => !isOutOfStock && handleAddToCart(prod)}
+                onClick={() => handleAddToCart(prod)}
                 className={`group relative bg-slate-900/60 backdrop-blur-xl p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between shadow-lg shadow-black/10 ${
                   isOutOfStock
                     ? 'opacity-40 border-white/5 cursor-not-allowed bg-slate-950/60'
@@ -421,11 +432,11 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
           </div>
 
           {/* Cash Received & Change Calculations if Cash */}
-          {paymentMethod === 'cash' && (
+          {paymentMethod !== 'due' && (
             <div className="grid grid-cols-2 gap-2 bg-white/[0.03] p-2.5 rounded-xl border border-white/10">
               <div>
                 <label className="block text-[10px] font-medium text-slate-400 mb-0.5">
-                  {t.pos.receivedAmount}
+                  {isBn ? 'বর্তমানে জমা' : (t.pos.receivedAmount || 'Received Amount')}
                 </label>
                 <input
                   type="number"

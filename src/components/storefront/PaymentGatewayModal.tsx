@@ -22,15 +22,17 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   settings,
   onSuccess,
 }) => {
-  const [step, setStep] = useState<'input_number' | 'otp' | 'pin' | 'processing' | 'success'>('input_number');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'pin' | 'processing' | 'success'>('pin');
   const [pin, setPin] = useState('');
-  const [cardHolder, setCardHolder] = useState('MR. JOHN DOE');
-  const [cardNumber, setCardNumber] = useState('4532 •••• •••• 8821');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvv, setCardCvv] = useState('789');
   const [generatedTrx, setGeneratedTrx] = useState('');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setStep('pin');
+      setPin('');
+      setGeneratedTrx('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -53,11 +55,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   };
 
   const handleNextStep = () => {
-    if (step === 'input_number') {
-      setStep('otp');
-    } else if (step === 'otp') {
-      setStep('pin');
-    } else if (step === 'pin') {
+    if (step === 'pin') {
       setStep('processing');
       setTimeout(() => {
         const trx = (isBkash ? 'BK' : isNagad ? 'NG' : isRocket ? 'RK' : isUpay ? 'UP' : 'CRD') + Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -101,118 +99,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
 
         {/* Gateway Body */}
         <div className="p-6">
-          {step === 'input_number' && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-xs font-semibold text-white">
-                  {isCard
-                    ? (isBn ? 'আপনার কার্ডের তথ্য প্রদান করুন' : 'Enter Your Card Details')
-                    : (isBn ? `আপনার ${isBkash ? 'বিকাশ' : isNagad ? 'নগদ' : isRocket ? 'রকেট' : 'উপায়'} একাউন্ট নাম্বার দিন` : `Enter your ${isBkash ? 'bKash' : isNagad ? 'Nagad' : isRocket ? 'Rocket' : 'Upay'} Account Number`)}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  {isBn ? 'একটি ওটিপি (OTP) পাঠানো হবে' : 'A verification OTP code will be sent'}
-                </p>
-              </div>
 
-              {!isCard ? (
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                    {isBn ? 'মোবাইল নাম্বার' : 'Account Mobile Number'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="01XXXXXXXXX"
-                      className="w-full pl-3 pr-10 py-2.5 text-sm font-mono font-medium border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white/[0.04] text-white"
-                    />
-                    <Smartphone className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-300 mb-0.5">Card Number</label>
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full px-3 py-2 text-xs font-mono border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-0.5">Expiry</label>
-                      <input
-                        type="text"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(e.target.value)}
-                        className="w-full px-3 py-2 text-xs font-mono border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-0.5">CVV</label>
-                      <input
-                        type="password"
-                        value={cardCvv}
-                        maxLength={4}
-                        onChange={(e) => setCardCvv(e.target.value)}
-                        className="w-full px-3 py-2 text-xs font-mono border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white/[0.04] text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={handleNextStep}
-                className={`w-full py-3 rounded-xl font-bold text-xs text-white ${themeBg} hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 shadow-lg`}
-              >
-                <span>{isBn ? 'এগিয়ে যান' : 'Proceed'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {step === 'otp' && (
-            <div className="space-y-4 text-center">
-              <div>
-                <p className="text-xs font-semibold text-white">
-                  {isBn ? 'ভেরিফিকেশন কোড (OTP) দিন' : 'Enter Verification Code'}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  {isBn ? 'আপনার মোবাইলে পাঠানো ৬ ডিজিটের কোড দিন (ডেমো: ১২৩৪৫৬)' : 'Enter 6-digit code sent to mobile (Demo: 123456)'}
-                </p>
-              </div>
-
-              <div>
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="1 2 3 4 5 6"
-                  className="w-full text-center text-lg tracking-widest font-mono font-bold py-2.5 border-2 border-dashed border-white/20 rounded-xl focus:outline-none focus:border-pink-500 bg-white/[0.04] text-white"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-slate-400">
-                <span className="cursor-pointer hover:underline text-pink-400 flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3" /> Resend OTP
-                </span>
-                <span>01:45</span>
-              </div>
-
-              <button
-                onClick={handleNextStep}
-                className={`w-full py-3 rounded-xl font-bold text-xs text-white ${themeBg} hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 shadow-lg`}
-              >
-                <span>{isBn ? 'কোড নিশ্চিত করুন' : 'Confirm Code'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
 
           {step === 'pin' && (
             <div className="space-y-4 text-center">
