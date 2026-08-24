@@ -48,54 +48,41 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({ isOpen, onClos
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-xs bg-slate-900 rounded-2xl border border-white/10 shadow-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-white">Calculator</h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => { setExpr((s) => s.slice(0, -1)); }}
-              className="px-2 py-1 text-xs rounded bg-white/5 text-white"
-            >
-              ←
-            </button>
-            <button
-              onClick={() => { clearAll(); }}
-              className="px-2 py-1 text-xs rounded bg-rose-500/10 text-rose-300"
-            >
-              C
-            </button>
-            <button
-              onClick={onClose}
-              className="px-2 py-1 text-xs rounded bg-white/5 text-white"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-slate-950/60 p-3 rounded-md mb-3">
-          <div className="text-xs text-slate-400 truncate">{expr || '0'}</div>
-          <div className="text-right text-lg font-mono text-white">{result || ''}</div>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {['7','8','9','/','4','5','6','*','1','2','3','-','0','.','%','+'].map((k) => (
-            <button
-              key={k}
-              onClick={() => append(k === '%' ? '/100' : k)}
-              className="py-2 rounded-lg bg-white/5 text-white font-bold"
-            >
-              {k}
-            </button>
-          ))}
-
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-[280px] bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-5 shadow-emerald-500/10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-white tracking-wide">Calculator</h3>
           <button
-            onClick={handleEquals}
-            className="col-span-4 py-2 rounded-lg bg-emerald-500 text-white font-bold"
+            onClick={onClose}
+            className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center text-xs hover:bg-rose-500/30 transition-colors"
           >
-            =
+            ✕
           </button>
+        </div>
+
+        <div className="bg-slate-950/80 p-4 rounded-2xl mb-4 border border-white/5 shadow-inner">
+          <div className="text-xs text-slate-400 truncate h-4">{expr || ''}</div>
+          <div className="text-right text-3xl font-mono text-white mt-1 h-9 tracking-tight overflow-hidden">{result || (expr ? '' : '0')}</div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2.5">
+          <button onClick={clearAll} className="col-span-2 py-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold transition-colors">AC</button>
+          <button onClick={() => setExpr((s) => s.slice(0, -1))} className="py-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold transition-colors">⌫</button>
+          <button onClick={() => append('/')} className="py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-lg transition-colors">÷</button>
+
+          {['7','8','9'].map(k => <button key={k} onClick={() => append(k)} className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-colors">{k}</button>)}
+          <button onClick={() => append('*')} className="py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-lg transition-colors">×</button>
+
+          {['4','5','6'].map(k => <button key={k} onClick={() => append(k)} className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-colors">{k}</button>)}
+          <button onClick={() => append('-')} className="py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-lg transition-colors">−</button>
+
+          {['1','2','3'].map(k => <button key={k} onClick={() => append(k)} className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-colors">{k}</button>)}
+          <button onClick={() => append('+')} className="py-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-lg transition-colors">+</button>
+
+          <button onClick={() => append('%')} className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-colors">%</button>
+          <button onClick={() => append('0')} className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-colors">0</button>
+          <button onClick={() => append('.')} className="py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-lg transition-colors">.</button>
+          <button onClick={handleEquals} className="py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xl shadow-lg shadow-emerald-500/30 transition-all">=</button>
         </div>
       </div>
     </div>

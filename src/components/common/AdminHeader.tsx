@@ -325,10 +325,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                               </div>
                               <span
                                 className={`text-xs font-bold font-mono ${
-                                  c.due > 0 ? 'text-rose-400' : 'text-emerald-400'
+                                  c.totalDue > 0 ? 'text-rose-400' : 'text-emerald-400'
                                 }`}
                               >
-                                {c.due > 0 ? `বাকী: ৳${c.due}` : 'পরিশোধিত'}
+                                {c.totalDue > 0 ? `বাকী: ৳${c.totalDue}` : 'পরিশোধিত'}
                               </span>
                             </button>
                           ))}
@@ -731,10 +731,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                           </div>
                           <span
                             className={`text-xs font-bold font-mono ${
-                              c.due > 0 ? 'text-rose-400' : 'text-emerald-400'
+                              c.totalDue > 0 ? 'text-rose-400' : 'text-emerald-400'
                             }`}
                           >
-                            {c.due > 0 ? `বাকী: ৳${c.due}` : 'পরিশোধিত'}
+                            {c.totalDue > 0 ? `বাকী: ৳${c.totalDue}` : 'পরিশোধিত'}
                           </span>
                         </button>
                       ))}

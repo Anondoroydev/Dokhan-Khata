@@ -171,7 +171,9 @@ export const POSView: React.FC<POSViewProps> = ({ onOpenReceipt, onOpenAddCustom
               placeholder={t.pos.searchProduct}
               className="w-full pl-11 pr-12 py-2.5 text-xs sm:text-sm border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 bg-white/[0.04] text-white placeholder-slate-500 backdrop-blur-md"
             />
-            <ScanBarcode className="w-5 h-5 text-emerald-400 absolute right-3.5 top-3 cursor-pointer hover:scale-110 transition-transform" title="Scan Barcode" />
+            <span title="Scan Barcode" className="absolute right-3.5 top-3 cursor-pointer hover:scale-110 transition-transform">
+              <ScanBarcode className="w-5 h-5 text-emerald-400" />
+            </span>
           </div>
 
           {/* Category Chips */}

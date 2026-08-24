@@ -175,6 +175,24 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <span>{isBn ? 'সর্বমোট প্রদেয়:' : 'Net Total:'}</span>
               <span className="text-emerald-700">৳{netTotal}</span>
             </div>
+            {transaction && transaction.receivedAmount !== undefined && (transaction.receivedAmount > 0 || (transaction.dueAmount && transaction.dueAmount > 0)) && (
+              <div className="flex justify-between text-slate-600 pt-1">
+                <span>{isBn ? 'জমা:' : 'Received:'}</span>
+                <span className="font-semibold text-slate-900">৳{transaction.receivedAmount}</span>
+              </div>
+            )}
+            {transaction && transaction.changeAmount !== undefined && transaction.changeAmount > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span>{isBn ? 'ফেরত (চেঞ্জ):' : 'Change:'}</span>
+                <span className="font-semibold">৳{transaction.changeAmount}</span>
+              </div>
+            )}
+            {transaction && transaction.dueAmount !== undefined && transaction.dueAmount > 0 && (
+              <div className="flex justify-between text-rose-600">
+                <span>{isBn ? 'নতুন বাকী:' : 'Due Amount:'}</span>
+                <span className="font-semibold">৳{transaction.dueAmount}</span>
+              </div>
+            )}
           </div>
 
           {/* Footer Note & Barcode Simulation */}

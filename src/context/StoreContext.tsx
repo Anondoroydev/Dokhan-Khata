@@ -85,7 +85,7 @@ interface StoreContextType {
     subtotal: number;
     discount: number;
     totalAmount: number;
-    paymentMethod: 'cash' | 'bkash' | 'nagad' | 'card' | 'due';
+    paymentMethod: 'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due';
     customerId?: string;
     receivedAmount?: number;
     note?: string;
@@ -102,7 +102,7 @@ interface StoreContextType {
     customerPhone: string;
     customerAddress: string;
     deliveryNotes?: string;
-    paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card';
+    paymentMethod: 'cod' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card';
     transactionId?: string;
     isPaid: boolean;
     receivedAmount?: number;
@@ -809,7 +809,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     subtotal: number;
     discount: number;
     totalAmount: number;
-    paymentMethod: 'cash' | 'bkash' | 'nagad' | 'card' | 'due';
+    paymentMethod: 'cash' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card' | 'due';
     customerId?: string;
     receivedAmount?: number;
     note?: string;
@@ -876,6 +876,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       paymentMethod: saleData.paymentMethod,
       receivedBy: currentRole === 'admin' ? 'Shop Owner' : 'Staff Cashier',
       invoiceNo: receiptId,
+      receivedAmount: received,
+      changeAmount: Math.max(0, received - total),
+      dueAmount: remaining,
     };
 
     setTransactions((prev) => [newTxn, ...prev]);
@@ -963,13 +966,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     customerPhone: string;
     customerAddress: string;
     deliveryNotes?: string;
-    paymentMethod: 'cod' | 'bkash' | 'nagad' | 'card';
+    paymentMethod: 'cod' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card';
     transactionId?: string;
     isPaid: boolean;
     receivedAmount?: number;
   }): Promise<Order> => {
     const subtotal = cart.reduce((sum, item) => sum + item.product.sellPrice * item.quantity, 0);
-    const deliveryFee = settings.deliveryFee;
+    const deliveryFee = settings.deliveryFee || 0;
     const discount = subtotal >= 1000 ? 50 : 0;
     const totalAmount = subtotal + deliveryFee - discount;
 
@@ -1038,7 +1041,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let customerRecord = customers.find((c) => c.phone === orderData.customerPhone || c.id === newOrder.customerId);
     if (!customerRecord) {
       try {
-        customerRecord = await addCustomer({ name: orderData.customerName, phone: orderData.customerPhone, address: orderData.customerAddress });
+        customerRecord = await addCustomer({ name: orderData.customerName, phone: orderData.customerPhone, address: orderData.customerAddress, creditLimit: 0 });
       } catch (e) {
         console.warn('Failed to auto-create customer for online order', e);
       }

@@ -212,7 +212,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ onOpenReceipt }) => {
 
                   <div className="text-right">
                     <span className="text-sm font-black font-mono text-emerald-400">
-                      ৳{order.totalAmount}
+                      ৳{(typeof order.totalAmount === 'number' && !isNaN(order.totalAmount)) ? order.totalAmount : order.items.reduce((s, i) => s + (Number(i.total) || 0), 0)}
                     </span>
                   </div>
                 </div>

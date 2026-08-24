@@ -97,7 +97,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
   const cartSubtotal = cart.reduce((sum, item) => sum + item.product.sellPrice * item.quantity, 0);
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const discount = cartSubtotal >= 1000 ? 50 : 0;
-  const deliveryFee = settings.deliveryFee;
+  const deliveryFee = settings.deliveryFee || 0;
   const netTotal = cartSubtotal + deliveryFee - discount;
 
   const onlineProducts = useMemo(() => {
@@ -159,7 +159,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       customerPhone,
       customerAddress,
       deliveryNotes,
-      paymentMethod,
+      paymentMethod: paymentMethod as 'cod' | 'bkash' | 'nagad' | 'rocket' | 'upay' | 'card',
       transactionId: trxId,
       isPaid: true,
       receivedAmount: netTotal,
@@ -205,8 +205,15 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
     }
   };
 
-  // Find customer for My Baki tab
   const activeCustomerRecord = customers.find((c) => c.phone === customerPhone);
+
+  const getSafeTotal = (ord: any) => {
+    if (typeof ord.totalAmount === 'number' && !isNaN(ord.totalAmount)) return ord.totalAmount;
+    if (ord.items && Array.isArray(ord.items)) {
+      return ord.items.reduce((s: number, i: any) => s + (Number(i.total) || 0), 0);
+    }
+    return 0;
+  };
 
   return (
     <div className="space-y-6">
@@ -522,6 +529,19 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                             {ord.status}
                           </span>
                         </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400">{isBn ? 'পেমেন্ট:' : 'Payment:'}</span>
+                            <span className="uppercase px-2 py-0.5 rounded-lg bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">{ord.paymentMethod}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-lg border ${ord.paymentStatus === 'paid' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                              {ord.paymentStatus === 'paid' ? (isBn ? 'পরিশোধিত' : 'PAID') : 'COD'}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-400 block">{isBn ? 'মোট প্রদেয়' : 'Total'}</span>
+                            <span className="text-lg font-black font-mono text-emerald-400">৳{getSafeTotal(ord)}</span>
+                          </div>
+                        </div>
 
                         <div className="divide-y divide-white/10 text-xs">
                           {ord.items.map((item, idx) => (
@@ -532,8 +552,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                           ))}
                         </div>
 
-                        <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
-                          <span>{isBn ? 'মোট প্রদেয়' : 'Total Payable'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
+                        <div className="flex items-center justify-end pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => onOpenReceipt(ord)}
@@ -599,6 +618,19 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                               <span>✓ {isBn ? 'সফল (Delivered)' : 'Delivered'}</span>
                             </span>
                           </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-400">{isBn ? 'পেমেন্ট:' : 'Payment:'}</span>
+                              <span className="uppercase px-2 py-0.5 rounded-lg bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">{ord.paymentMethod}</span>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-lg border ${ord.paymentStatus === 'paid' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                                {ord.paymentStatus === 'paid' ? (isBn ? 'পরিশোধিত' : 'PAID') : 'COD'}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-slate-400 block">{isBn ? 'মোট' : 'Total'}</span>
+                              <span className="text-lg font-black font-mono text-emerald-400">৳{getSafeTotal(ord)}</span>
+                            </div>
+                          </div>
 
                           <div className="divide-y divide-white/10 text-xs">
                             {ord.items.map((item, idx) => (
@@ -609,8 +641,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                             ))}
                           </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
-                            <span>{isBn ? 'পরিশোধিত' : 'Paid Total'}: <strong className="text-emerald-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
+                          <div className="flex items-center justify-end pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
                             <button
                               onClick={() => onOpenReceipt(ord)}
                               className="text-emerald-400 hover:text-emerald-300 transition-colors"
@@ -652,6 +683,19 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                               <span>✕ {isBn ? 'বাতিল (Cancelled)' : 'Cancelled'}</span>
                             </span>
                           </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-400">{isBn ? 'পেমেন্ট:' : 'Payment:'}</span>
+                              <span className="uppercase px-2 py-0.5 rounded-lg bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">{ord.paymentMethod}</span>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-lg border ${ord.paymentStatus === 'paid' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                                {ord.paymentStatus === 'paid' ? (isBn ? 'পরিশোধিত' : 'PAID') : 'COD'}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-slate-400 block">{isBn ? 'মোট' : 'Total'}</span>
+                              <span className="text-lg font-black font-mono text-rose-400">৳{getSafeTotal(ord)}</span>
+                            </div>
+                          </div>
 
                           <div className="divide-y divide-white/10 text-xs">
                             {ord.items.map((item, idx) => (
@@ -662,8 +706,7 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                             ))}
                           </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
-                            <span>{isBn ? 'মোট' : 'Total'}: <strong className="text-rose-400 font-mono">৳{ord.totalAmount}</strong> ({ord.paymentMethod.toUpperCase()})</span>
+                          <div className="flex items-center justify-end pt-2 border-t border-white/10 text-xs font-bold text-slate-200">
                             <button
                               onClick={() => onOpenReceipt(ord)}
                               className="text-rose-400 hover:text-rose-300 transition-colors"
@@ -678,7 +721,6 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
                       {isBn ? 'আপনার কোনো বাতিল করা অর্ডার দেখছি না।' : 'No cancelled orders.'}
                     </div>
                   )}
-
                 </div>
 
               </div>
@@ -1193,26 +1235,30 @@ export const CustomerStorefront: React.FC<CustomerStorefrontProps> = ({
       )}
 
       {/* Payment Gateway Modal Component */}
-      <PaymentGatewayModal
-        isOpen={isGatewayOpen}
-        onClose={() => setIsGatewayOpen(false)}
-        amount={netTotal}
-        paymentMethod={paymentMethod === 'cod' ? 'bkash' : paymentMethod}
-        language={language}
-        settings={settings}
-        onSuccess={handleGatewaySuccess}
-      />
+      {isGatewayOpen && (
+        <PaymentGatewayModal
+          isOpen={true}
+          onClose={() => setIsGatewayOpen(false)}
+          amount={netTotal}
+          paymentMethod={paymentMethod === 'cod' ? 'bkash' : paymentMethod}
+          language={language}
+          settings={settings}
+          onSuccess={handleGatewaySuccess}
+        />
+      )}
 
       {/* Baki Payment Gateway Modal */}
-      <PaymentGatewayModal
-        isOpen={isBakiGatewayOpen}
-        onClose={() => setIsBakiGatewayOpen(false)}
-        amount={Number(bakiPayAmount) || 0}
-        paymentMethod={bakiPayMethod}
-        language={language}
-        settings={settings}
-        onSuccess={handleBakiGatewaySuccess}
-      />
+      {isBakiGatewayOpen && (
+        <PaymentGatewayModal
+          isOpen={true}
+          onClose={() => setIsBakiGatewayOpen(false)}
+          amount={Number(bakiPayAmount) || 0}
+          paymentMethod={bakiPayMethod}
+          language={language}
+          settings={settings}
+          onSuccess={handleBakiGatewaySuccess}
+        />
+      )}
 
       {/* Footer */}
       <Footer onOpenChat={onOpenChat} />

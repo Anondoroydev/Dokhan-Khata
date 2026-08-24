@@ -44,7 +44,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenChat }) => {
               </div>
               <div>
                 <h3 className="text-base font-black text-white tracking-tight">
-                  {settings.shopName || (isBn ? 'দোকান খাতা' : 'DokanKhata')}
+                  {settings.storeName || (isBn ? 'দোকান খাতা' : 'DokanKhata')}
                 </h3>
                 <p className="text-[11px] text-emerald-400 font-bold">
                   {isBn ? 'ডিজিটাল ক্যাশমেমো ও ইনভেন্টরি' : 'Smart POS & Business Ledger'}
@@ -144,12 +144,12 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenChat }) => {
             <div className="space-y-2.5 text-xs">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span className="text-slate-300">{settings.shopAddress || (isBn ? 'ঢাকা, বাংলাদেশ' : 'Dhaka, Bangladesh')}</span>
+                <span className="text-slate-300">{settings.address || (isBn ? 'ঢাকা, বাংলাদেশ' : 'Dhaka, Bangladesh')}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <a href={`tel:${settings.shopPhone}`} className="text-slate-300 hover:text-white transition-colors font-mono">
-                  {settings.shopPhone || '01826339098'}
+                <a href={`tel:${settings.phone}`} className="text-slate-300 hover:text-white transition-colors font-mono">
+                  {settings.phone || '01826339098'}
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
@@ -204,7 +204,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab, onOpenChat }) => {
       <div className="border-t border-white/5 bg-slate-950 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 text-slate-400">
-            <span>© {new Date().getFullYear()} {settings.shopName || 'দোকান খাতা'}</span>
+            <span>© {new Date().getFullYear()} {settings.storeName || 'দোকান খাতা'}</span>
             <span>•</span>
             <span className="text-slate-500">{isBn ? 'সর্বস্বত্ব সংরক্ষিত' : 'All rights reserved.'}</span>
           </div>

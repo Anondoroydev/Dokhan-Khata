@@ -22,13 +22,15 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   settings,
   onSuccess,
 }) => {
-  const [step, setStep] = useState<'pin' | 'processing' | 'success'>('pin');
+  const [step, setStep] = useState<'otp' | 'pin' | 'processing' | 'success'>('otp');
+  const [otp, setOtp] = useState('');
   const [pin, setPin] = useState('');
   const [generatedTrx, setGeneratedTrx] = useState('');
 
   React.useEffect(() => {
     if (isOpen) {
-      setStep('pin');
+      setStep('otp');
+      setOtp('');
       setPin('');
       setGeneratedTrx('');
     }
@@ -55,7 +57,9 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   };
 
   const handleNextStep = () => {
-    if (step === 'pin') {
+    if (step === 'otp') {
+      setStep('pin');
+    } else if (step === 'pin') {
       setStep('processing');
       setTimeout(() => {
         const trx = (isBkash ? 'BK' : isNagad ? 'NG' : isRocket ? 'RK' : isUpay ? 'UP' : 'CRD') + Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -95,12 +99,63 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
             <span className="text-xs text-white/80">{isBn ? 'পরিশোধযোগ্য টাকা' : 'Payable Amount'}:</span>
             <span className="text-xl font-extrabold font-mono tracking-tight text-white">৳{amount}</span>
           </div>
+
+          {/* Step indicator */}
+          <div className="mt-3 flex items-center gap-1.5">
+            <div className={`h-1 flex-1 rounded-full ${step === 'otp' || step === 'pin' || step === 'processing' || step === 'success' ? 'bg-white' : 'bg-white/30'}`} />
+            <div className={`h-1 flex-1 rounded-full ${step === 'pin' || step === 'processing' || step === 'success' ? 'bg-white' : 'bg-white/30'}`} />
+            <div className={`h-1 flex-1 rounded-full ${step === 'success' ? 'bg-white' : 'bg-white/30'}`} />
+          </div>
         </div>
 
         {/* Gateway Body */}
         <div className="p-6">
 
+          {/* OTP Step */}
+          {step === 'otp' && (
+            <div className="space-y-4 text-center">
+              <div>
+                <p className="text-xs font-semibold text-white">
+                  {isBn ? 'ভেরিফিকেশন কোড (OTP) দিন' : 'Enter OTP Verification Code'}
+                </p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {isBn
+                    ? 'আপনার মোবাইলে পাঠানো ৬ ডিজিটের কোড দিন'
+                    : 'Enter the 6-digit code sent to your mobile'}
+                </p>
+              </div>
 
+              <div>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/, ''))}
+                  placeholder="1 2 3 4 5 6"
+                  className="w-full text-center text-lg tracking-widest font-mono font-bold py-2.5 border-2 border-dashed border-white/20 rounded-xl focus:outline-none focus:border-pink-500 bg-white/[0.04] text-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <span className="cursor-pointer hover:underline text-pink-400 flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3" />
+                  {isBn ? 'পুনরায় পাঠান' : 'Resend OTP'}
+                </span>
+                <span className="font-mono">01:45</span>
+              </div>
+
+              <button
+                onClick={handleNextStep}
+                disabled={otp.length < 4}
+                className={`w-full py-3 rounded-xl font-bold text-xs text-white ${themeBg} hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <span>{isBn ? 'কোড নিশ্চিত করুন' : 'Confirm Code'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* PIN Step */}
           {step === 'pin' && (
             <div className="space-y-4 text-center">
               <div>
@@ -150,7 +205,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <h4 className="font-bold text-base text-white">
-                {isBn ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Successful!'}
+                {isBn ? 'পেমেন্ট সফল হয়েছে!' : 'Payment Successful!'}
               </h4>
               <p className="text-xs text-slate-300">
                 {isBn ? 'ট্রানজেকশন আইডি:' : 'TrxID:'} <span className="font-mono font-bold text-emerald-400">{generatedTrx}</span>
